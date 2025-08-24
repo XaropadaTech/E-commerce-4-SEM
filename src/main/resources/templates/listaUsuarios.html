@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <p>lista usuarios</p>
+    <main>
+    <section class="employees-section">
+        <h2>Usuários Cadastrados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Grupo</th>
+                    <th>Alterar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="usuario : ${usuarios}">
+                    <td th:text="${usuario.nome}">Nome</td>
+                    <td th:text="${usuario.email}">Email</td>
+                    <td>
+                <form th:action="@{/usuario/alterar-status}" method="post">
+                    <input type="hidden" name="id" th:value="${usuario.id}" />
+                    <button type="submit" 
+                            th:text="${usuario.status ? 'Desativar' : 'Ativar'}">
+                    </button>
+                </form>
+            </td>
+                    <td th:text="${usuario.grupo}">Grupo</td>
+                    <td>
+                        <!-- Botão que redireciona para a página de alterar usuário -->
+                        <a th:href="@{/alterarUsuario(id=${usuario.id})}" class="btn-alterar">Alterar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="/cadastroUsuario" class="add-employee">Cadastrar Usuário</a>
+    </section>
+</main>
+</body>
+</html>
