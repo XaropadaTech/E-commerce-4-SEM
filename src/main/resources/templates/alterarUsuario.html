@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alterar Usuário</title>
+</head>
+<body>
+    <h1>Alterar Usuário</h1>
+    <form th:action="@{/usuario/salvar-alteracao}" th:object="${usuario}" method="post">
+    <input type="hidden" th:field="*{id}" />
+
+    <label for="nome">Nome:</label>
+    <input type="text" th:field="*{nome}" id="nome" required /><br/><br/>
+
+    <label for="cpf">CPF:</label>
+    <input type="text" th:field="*{cpf}" id="cpf" required /><br/><br/>
+
+    <label for="senha">Senha:</label>
+        <input type="password" th:field="*{senha}" id="senha" /><br/><br/>
+
+        <label for="confirmarSenha">Confirmar Senha:</label>
+        <input type="password" id="confirmarSenha" name="confirmarSenha" /><br/><br/>
+
+    <button type="submit">Salvar Alterações</button>
+</form>
+
+    <a th:href="@{/listaUsuarios}">Voltar para Lista</a>
+
+    <script th:inline="javascript">
+/*<![CDATA[*/
+    /* Verifica se existe o atributo antes de tentar usá-lo */
+    /* Thymeleaf cria uma variável JS nula se não existir no contexto */
+    let sucesso = /*[[${sucesso}]]*/ null;
+    let erro = /*[[${erro}]]*/ null;
+
+    if (sucesso !== null) {
+        alert(sucesso);
+    }
+
+    if (erro !== null) {
+        alert(erro);
+    }
+/*]]>*/
+</script>
+</body>
+</html>

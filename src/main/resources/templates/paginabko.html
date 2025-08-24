@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Página BK0</title>
+</head>
+<body>
+<h1>Bem-vindo, <span th:text="${grupo}">Usuário</span>!</h1>
+
+    <div th:if="${grupo == 'administrador'}">
+        <p>Conteúdo exclusivo para Administrador</p>
+        <!-- Pode colocar botões, menus, relatórios, etc -->
+        <ul>
+            <li><a th:href="@{/listaProdutos}">Lista de Produtos</a></li>
+            <li><a th:href="@{/listaUsuarios}">Lista de Usuários</a></li>
+        </ul>
+    </div>
+
+    <div th:if="${grupo == 'estoquista'}">
+        <p>Conteúdo exclusivo para Estoquista</p>
+        <!-- Outra parte da página para o estoquista -->
+        <ul>
+            <li><a th:href="@{/listaProdutos}">Lista de Produtos</a></li>
+        </ul>
+    </div>
+</body>
+</html>
