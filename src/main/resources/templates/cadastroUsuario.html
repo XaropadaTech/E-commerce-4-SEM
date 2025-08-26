@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastrar Usuário</title>
+</head>
+<body>
+  <h1 style="text-align:center;">Cadastrar Usuário</h1>
+
+  <form th:action="@{/usuario}" th:object="${usuario}" method="post" novalidate>
+    <div>
+      <label for="nome">Nome *</label>
+      <input id="nome" type="text" th:field="*{nome}" maxlength="100" required />
+      <div class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
+    </div>
+
+    <div>
+      <label for="cpf">CPF *</label>
+      <input id="cpf" type="text" th:field="*{cpf}" maxlength="14" placeholder="Somente números" required />
+      <div class="erro" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
+    </div>
+
+    <div>
+      <label for="email">E-mail *</label>
+      <input id="email" type="email" th:field="*{email}" maxlength="100" required />
+      <div class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
+    </div>
+
+    <div class="inline">
+      <label for="status">Ativo *</label>
+      <input id="status" type="checkbox" th:field="*{status}" />
+      <div class="erro" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Erro</div>
+    </div>
+
+    <div>
+      <label for="grupo">Grupo *</label>
+      <select id="grupo" th:field="*{grupo}" required>
+        <option value="" disabled selected>Selecione...</option>
+        <option value="administrador">administrador</option>
+        <option value="estoquista">estoquista</option>
+        <option value="gerente">gerente</option>
+      </select>
+      <div class="erro" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
+    </div>
+
+    <div>
+      <label for="senha">Senha *</label>
+      <input id="senha" type="password" th:field="*{senha}" maxlength="255" required />
+      <div class="erro" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}">Erro</div>
+    </div>
+
+    <div>
+      <label for="confirmarSenha">Confirmar Senha *</label>
+      <input id="confirmarSenha" type="password" name="confirmarSenha" required />
+    </div>
+
+    <div class="actions">
+      <a class="btn" th:href="@{/listaUsuarios}">Cancelar</a>
+      <button class="btn-primary" type="submit">Salvar</button>
+    </div>
+  </form>
+
+  <script th:inline="javascript">
+    // Validação simples de confirmação de senha no cliente
+    (function() {
+      var form = document.querySelector('form');
+      form.addEventListener('submit', function(e) {
+        var s1 = document.getElementById('senha').value;
+        var s2 = document.getElementById('confirmarSenha').value;
+        if (s1 !== s2) {
+          e.preventDefault();
+          alert('As senhas não coincidem.');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

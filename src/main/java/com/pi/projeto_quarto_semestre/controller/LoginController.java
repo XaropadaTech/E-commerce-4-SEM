@@ -85,21 +85,31 @@ public String mostrarListaProdutos(HttpSession session, Model model) {
 }
 
 @GetMapping("/listaUsuarios")
-public String mostrarListaUsuarios(HttpSession session, Model model) {
-    String grupo = (String) session.getAttribute("grupoUsuario"); // mesmo nome usado no login
+public String mostrarListaUsuarios(
+        @RequestParam(value = "nome", required = false) String nome,  // <-- NOVO
+        HttpSession session,
+        Model model) {
+    
+    String grupo = (String) session.getAttribute("grupoUsuario"); 
     if (grupo == null) {
-        return "redirect:/login";  // se não estiver logado, redireciona para login
+        return "redirect:/login";  
     }
 
     model.addAttribute("grupo", grupo);
-    
-    // Adiciona a lista de usuários ao model
-    List<Usuario> usuarios = usuarioRepository.findAll();
+
+    // Se o parâmetro nome não veio, lista todos
+    List<Usuario> usuarios;
+    if (nome != null && !nome.isBlank()) {
+        usuarios = usuarioRepository.findByNomeContainingIgnoreCase(nome); // <-- usa o filtro
+    } else {
+        usuarios = usuarioRepository.findAll();
+    }
+
     model.addAttribute("usuarios", usuarios);
+    model.addAttribute("filtroNome", nome == null ? "" : nome); // <-- para preencher no input
 
     return "listaUsuarios";
 }
-
 
 @GetMapping("/alterarUsuario")
 public String mostrarFormularioAlterarUsuario(@RequestParam(required = false) Long id, Model model) {
@@ -165,5 +175,24 @@ public String alterarStatusUsuario(@RequestParam Long  id) {
 
     return "redirect:/listaUsuarios"; // recarrega a tabela
 }
+
+ // EXIBIR formulário de cadastro
+    @GetMapping("/cadastroUsuario")
+    public String cadastroUsuario(Model model) {
+        model.addAttribute("usuario", new Usuario());
+        return "cadastroUsuario";
+    }
+
+     // SALVAR novo usuário
+    @PostMapping("/usuario")
+    public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario,
+                                RedirectAttributes ra) {
+        // Ex.: definir status padrão ativo, validar campos, etc.
+        // usuario.setStatus(Boolean.TRUE);
+        usuarioRepository.save(usuario);
+        ra.addFlashAttribute("mensagem", "Usuário cadastrado com sucesso!");
+        return "redirect:/listaUsuarios";
+    }
+
 
 }
