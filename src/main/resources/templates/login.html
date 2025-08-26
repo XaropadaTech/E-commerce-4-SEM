@@ -16,7 +16,7 @@
     }
 
     .login-container {
-      background-color: white;
+      background-color: #fff;
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
@@ -28,7 +28,7 @@
       margin-bottom: 20px;
     }
 
-    .login-container input[type="text"],
+    .login-container input[type="email"],
     .login-container input[type="password"] {
       width: 100%;
       padding: 10px;
@@ -46,27 +46,31 @@
       color: white;
       font-size: 16px;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     .login-container input[type="submit"]:hover {
       background-color: #45a049;
     }
+
+    .erro {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="login-container">
+    <h2>Login</h2>
     <form action="/autenticar" method="post">
-    <input type="email" name="email" placeholder="Email" required />
-    <input type="password" name="senha" placeholder="Senha" required />
-    <button type="submit">Entrar</button>
-</form>
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="senha" placeholder="Senha" required />
+      <input type="submit" value="Entrar" />
+    </form>
 
-<div>
     <!-- Exibe erro se existir -->
-    <p style="color:red;">
-        ${erro}
-    </p>
-</div>
+    <p th:if="${erro}" th:text="${erro}" class="erro"></p>
   </div>
 </body>
 </html>
