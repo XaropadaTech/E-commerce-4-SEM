@@ -34,7 +34,8 @@
                 <form th:action="@{/usuario/alterar-status}" method="post">
                     <input type="hidden" name="id" th:value="${usuario.id}" />
                     <button type="submit" 
-                            th:text="${usuario.status ? 'Desativar' : 'Ativar'}">
+                            th:text="${usuario.status ? 'Desativar' : 'Ativar'}"
+                            onclick="return confirm('Tem certeza que deseja alterar o status deste usuário?')">
                     </button>
                 </form>
             </td>

@@ -27,11 +27,11 @@
       <div class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
     </div>
 
-    <div class="inline">
+    <!-- <div class="inline">
       <label for="status">Ativo *</label>
       <input id="status" type="checkbox" th:field="*{status}" />
       <div class="erro" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Erro</div>
-    </div>
+    </div> -->
 
     <div>
       <label for="grupo">Grupo *</label>
@@ -39,7 +39,6 @@
         <option value="" disabled selected>Selecione...</option>
         <option value="administrador">administrador</option>
         <option value="estoquista">estoquista</option>
-        <option value="gerente">gerente</option>
       </select>
       <div class="erro" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
     </div>

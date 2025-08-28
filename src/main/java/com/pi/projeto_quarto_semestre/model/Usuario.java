@@ -16,7 +16,7 @@ public class Usuario {
 
     private String email;
 
-    private Boolean status;
+    private Boolean status = true;
 
     @Enumerated(EnumType.STRING)
     private Grupo grupo;
