@@ -12,8 +12,10 @@ public class Usuario {
 
     private String nome;
 
+    @Column(name = "cpf", unique = true, nullable = false, length = 14) // pode ser 11/14 (com máscara)
     private String cpf;
 
+    @Column(name = "email", unique = true, nullable = false, length = 100)
     private String email;
 
     private Boolean status = true;

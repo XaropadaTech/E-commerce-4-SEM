@@ -9,21 +9,26 @@
   <h1 style="text-align:center;">Cadastrar Usuário</h1>
 
   <form th:action="@{/usuario}" th:object="${usuario}" method="post" novalidate>
+    <div th:if="${mensagem}" style="color:green;" th:text="${mensagem}"></div>
+    <div th:if="${erro}"     style="color:red;"   th:text="${erro}"></div>
+
+
     <div>
       <label for="nome">Nome *</label>
-      <input id="nome" type="text" th:field="*{nome}" maxlength="100" required />
+      <input id="nome" type="text" th:field="*{nome}" maxlength="100" placeholder="Digite seu nome" required />
       <div class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
     </div>
 
     <div>
       <label for="cpf">CPF *</label>
-      <input id="cpf" type="text" th:field="*{cpf}" maxlength="14" placeholder="Somente números" required />
+      <input id="cpf" type="text" th:field="*{cpf}" maxlength="11" placeholder="Somente números" required />
       <div class="erro" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
     </div>
 
     <div>
       <label for="email">E-mail *</label>
-      <input id="email" type="email" th:field="*{email}" maxlength="100" required />
+      <input id="email" type="email" th:field="*{email}" maxlength="100" placeholder="Digite seu e-mail" />
+      <small id="emailMsg" style="color:red;display:none;">E-mail já cadastrado.</small>
       <div class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
     </div>
 
@@ -71,8 +76,43 @@
           e.preventDefault();
           alert('As senhas não coincidem.');
         }
-      });
+      }
+      
+      
+      );
     })();
+
+
+    // Validação simples de e-mail do usuário
+    (function() {
+    const email = document.getElementById('email');
+    const msg   = document.getElementById('emailMsg');
+    const form  = document.querySelector('form');
+
+    async function checkEmail(value) {
+      if (!value) { msg.style.display = 'none'; return false; }
+      try {
+        const r = await fetch(/*[[@{/usuario/email-exists}]]*/'/usuario/email-exists' + '?email=' + encodeURIComponent(value));
+        const exists = await r.json();
+        msg.style.display = exists ? 'inline' : 'none';
+        return exists;
+      } catch(e) {
+        // silencioso
+        return false;
+      }
+    }
+
+    email.addEventListener('blur',  () => checkEmail(email.value));
+    email.addEventListener('input', () => checkEmail(email.value));
+
+    form.addEventListener('submit', async function(e) {
+      const exists = await checkEmail(email.value);
+      if (exists) {
+        e.preventDefault();
+        alert('Já existe um usuário com esse e-mail.');
+      }
+    });
+  })();
   </script>
 </body>
 </html>
