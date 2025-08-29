@@ -1,5 +1,6 @@
 package com.pi.projeto_quarto_semestre.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
@@ -30,16 +31,31 @@ public class LoginController {
         return "index"; // nome da view (ex: index.html ou index.jsp)
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
+@GetMapping("/login")
+public String login(HttpSession session) {
+    if (session.getAttribute("emailUsuario") != null) {
+        // Se já estiver logado, redireciona para página principal
+        return "redirect:/paginabko";
     }
+    return "login";
+}
+
+@GetMapping("/autenticar")
+public String autenticarGet() {
+    return "redirect:/login";
+}
 
     @PostMapping("/autenticar")
     public String autenticar(@RequestParam String email,
             @RequestParam String senha,
             Model model,
-            HttpSession session) {
+            HttpSession session,
+            HttpServletRequest request) {
+
+                if (session.getAttribute("emailUsuario") != null) {
+        // Se já estiver logado, bloqueia o login
+        return "redirect:/paginabko";
+    }
 
         // Busca o usuário pelo email
         Usuario usuario = usuarioRepository.findByEmail(email);
@@ -56,7 +72,7 @@ public class LoginController {
 
         // Caso contrário, erro de login
         model.addAttribute("erro", "Email ou senha inválidos.");
-        return "login";
+        return "redirect:/login";
     }
 
     @GetMapping("/paginabko")
@@ -111,26 +127,33 @@ public class LoginController {
     }
 
     @GetMapping("/alterarUsuario")
-    public String mostrarFormularioAlterarUsuario(@RequestParam(required = false) Long id, Model model) {
-        if (id == null) {
-            return "redirect:/login"; // Ou uma página de erro amigável
-        }
-
-        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
-        if (usuarioOpt.isPresent()) {
-            model.addAttribute("usuario", usuarioOpt.get());
-            return "alterarUsuario"; // nome do template
-        } else {
-            return "redirect:/listaUsuarios"; // ou página de erro
-        }
+public String mostrarFormularioAlterarUsuario(@RequestParam(required = false) Long id, Model model, HttpSession session) {
+    if (id == null) {
+        return "redirect:/login"; // Ou uma página de erro amigável
     }
 
+    Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+    if (usuarioOpt.isPresent()) {
+        model.addAttribute("usuario", usuarioOpt.get());
+        // Agora você pode usar session aqui
+        String emailLogado = (String) session.getAttribute("emailUsuario");
+        model.addAttribute("emailLogado", emailLogado);
+        return "alterarUsuario"; // nome do template
+    } else {
+        return "redirect:/listaUsuarios"; // ou página de erro
+    }
+}
+
     @PostMapping("/usuario/salvar-alteracao")
-    public String salvarAlteracaoUsuario(
+public String salvarAlteracaoUsuario(
         @ModelAttribute Usuario usuario,
         @RequestParam String confirmarSenha,
         RedirectAttributes redirectAttributes,
-        Model model) {
+        Model model,
+        HttpSession session) {
+
+    // Pega o email do usuário logado na sessão
+    String emailLogado = (String) session.getAttribute("emailUsuario");
 
     Optional<Usuario> usuarioExistente = usuarioRepository.findById(usuario.getId());
 
@@ -142,7 +165,7 @@ public class LoginController {
         String emailNovo = usuario.getEmail();
 
         boolean mudouEmail = emailNovo != null && !emailNovo.equalsIgnoreCase(u.getEmail());
-        boolean mudouCpf   = cpfNovo   != null && !cpfNovo.equalsIgnoreCase(u.getCpf());
+        boolean mudouCpf = cpfNovo != null && !cpfNovo.equalsIgnoreCase(u.getCpf());
 
         // Checagem de duplicidade se mudou o e-mail
         if (mudouEmail && usuarioRepository.existsByEmail(emailNovo)) {
@@ -158,7 +181,7 @@ public class LoginController {
             return "redirect:/alterarUsuario?id=" + usuario.getId();
         }
 
-        // Atualiza dados
+        // Atualiza dados básicos
         u.setNome(usuario.getNome());
 
         if (mudouCpf) {
@@ -171,7 +194,7 @@ public class LoginController {
         // Atualização de senha (opcional)
         if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
             if (usuario.getSenha().equals(confirmarSenha)) {
-                // TODO: aplicar hash (BCrypt) aqui
+                // TODO: aplicar hash (BCrypt) aqui para maior segurança
                 u.setSenha(usuario.getSenha());
             } else {
                 redirectAttributes.addFlashAttribute("erro", "As senhas não coincidem.");
@@ -179,12 +202,17 @@ public class LoginController {
             }
         }
 
+        // ALTERAÇÃO DO GRUPO: só se não for o próprio usuário logado
+        if (!u.getEmail().equalsIgnoreCase(emailLogado)) {
+            // Altera o grupo conforme selecionado no formulário
+            u.setGrupo(usuario.getGrupo());
+        }
+
         try {
             usuarioRepository.save(u);
             redirectAttributes.addFlashAttribute("sucesso", "Usuário alterado com sucesso!");
             return "redirect:/listaUsuarios";
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            // Blindagem final para UNIQUE no BD (email/cpf)
             redirectAttributes.addFlashAttribute("erro", "E-mail ou CPF já cadastrado.");
             redirectAttributes.addFlashAttribute("usuario", usuario);
             return "redirect:/alterarUsuario?id=" + usuario.getId();
@@ -217,7 +245,7 @@ public class LoginController {
 
     // SALVAR novo usuário
     @PostMapping("/usuario")
-public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario,
+public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario, @RequestParam String confirmarSenha,
                             RedirectAttributes ra) {
 
     // Normalizar CPF para somente dígitos
@@ -239,6 +267,17 @@ public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario,
         return "redirect:/cadastroUsuario";
     }
 
+     // Validação da senha e confirmação
+    if (usuario.getSenha() == null || usuario.getSenha().isBlank()) {
+        ra.addFlashAttribute("erro", "A senha não pode ficar em branco.");
+        ra.addFlashAttribute("usuario", usuario);
+        return "redirect:/cadastroUsuario";
+    } else if (!usuario.getSenha().equals(confirmarSenha)) {
+        ra.addFlashAttribute("erro", "As senhas não coincidem.");
+        ra.addFlashAttribute("usuario", usuario);
+        return "redirect:/cadastroUsuario";
+    }
+
     try {
         usuarioRepository.save(usuario);
         ra.addFlashAttribute("mensagem", "Usuário cadastrado com sucesso!");
@@ -251,5 +290,11 @@ public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario,
     }
 }
 
+
+@GetMapping("/logout")
+public String logout(HttpSession session) {
+    session.invalidate(); // invalida a sessão atual
+    return "redirect:/login"; // redireciona para a página de login
+}
 
 }

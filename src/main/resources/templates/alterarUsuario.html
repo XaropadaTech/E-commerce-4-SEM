@@ -16,6 +16,15 @@
     <label for="cpf">CPF:</label>
     <input type="text" th:field="*{cpf}" id="cpf" required /><br/><br/>
 
+    <!-- Campo de grupo (somente se não estiver alterando a si mesmo) -->
+<div th:if="${emailLogado != usuario.email}">
+    <label for="grupo">Grupo:</label>
+    <select id="grupo" th:field="*{grupo}">
+        <option th:value="administrador" th:text="'Administrador'"></option>
+        <option th:value="estoquista" th:text="'Estoquista'"></option>
+    </select><br/><br/>
+</div>
+
     <label for="senha">Senha:</label>
         <input type="password" th:field="*{senha}" id="senha" /><br/><br/>
 
