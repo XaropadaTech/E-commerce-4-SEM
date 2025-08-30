@@ -92,7 +92,7 @@
     async function checkEmail(value) {
       if (!value) { msg.style.display = 'none'; return false; }
       try {
-        const r = await fetch(/*[[@{/usuario/email-exists}]]*/'/usuario/email-exists' + '?email=' + encodeURIComponent(value));
+        const r = await fetch('/usuario/email-exists' + '?email=' + encodeURIComponent(value));
         const exists = await r.json();
         msg.style.display = exists ? 'inline' : 'none';
         return exists;
@@ -103,7 +103,7 @@
     }
 
     email.addEventListener('blur',  () => checkEmail(email.value));
-    email.addEventListener('input', () => checkEmail(email.value));
+    // email.addEventListener('input', () => checkEmail(email.value));
 
     form.addEventListener('submit', async function(e) {
       const exists = await checkEmail(email.value);
@@ -113,6 +113,44 @@
       }
     });
   })();
+
+      (function() {
+    const cpfInput = document.getElementById('cpf');
+
+    // Função que calcula a validade do CPF
+    function validaCPF(cpf) {
+        const cpfLimpo = cpf.replace(/[^\d]+/g, '');
+        if (cpfLimpo.length !== 11 || /^(\d)\1{10}$/.test(cpfLimpo)) return false;
+        let soma = 0, resto;
+        for (let i = 1; i <= 9; i++) {
+          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+        }
+        resto = (soma * 10) % 11;
+        if ((resto === 10) || (resto === 11)) resto = 0;
+        if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
+        soma = 0;
+        for (let i = 1; i <= 10; i++) {
+          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
+        }
+        resto = (soma * 10) % 11;
+        if ((resto === 10) || (resto === 11)) resto = 0;
+        if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+        return true;
+    }
+
+    // Valida o CPF quando o usuário SAI do campo do CPF
+    cpfInput.addEventListener('blur', function() {
+        const cpfValor = cpfInput.value;
+
+        // Se o campo não estiver vazio e o CPF for inválido...
+        if (cpfValor && !validaCPF(cpfValor)) {
+            alert('CPF inválido! Por favor, corrija.');
+            // Limpa o campo para forçar a correção
+            cpfInput.value = '';
+        }
+    });
+})();
+
   </script>
 </body>
 </html>

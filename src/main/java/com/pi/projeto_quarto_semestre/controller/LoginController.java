@@ -290,6 +290,21 @@ public String salvarUsuario(@ModelAttribute("usuario") Usuario usuario, @Request
     }
 }
 
+    /**
+     * Este método é chamado via JavaScript (fetch) para verificar
+     * se um e-mail já está cadastrado no banco de dados.
+     * A anotação @ResponseBody faz com que ele retorne um dado (true/false)
+     * em vez de uma página HTML.
+     */
+    @GetMapping("/usuario/email-exists")
+    @ResponseBody // <-- MUITO IMPORTANTE: Indica que a resposta é um dado, não uma página
+    public boolean emailExists(@RequestParam String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        return usuarioRepository.existsByEmail(email);
+    }
+
 
 @GetMapping("/logout")
 public String logout(HttpSession session) {
