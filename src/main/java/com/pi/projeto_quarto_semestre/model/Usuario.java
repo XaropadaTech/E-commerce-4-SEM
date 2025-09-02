@@ -23,6 +23,7 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Grupo grupo;
 
+    @Column(length = 60, nullable = false)
     private String senha;
 
     public enum Grupo {

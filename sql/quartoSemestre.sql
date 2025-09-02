@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   email VARCHAR(100) NOT NULL UNIQUE,
   status BOOLEAN NOT NULL,
   grupo VARCHAR(50) NOT NULL,
-  senha VARCHAR(255) NOT NULL
+  senha VARCHAR(60) NOT NULL
 ) ENGINE=InnoDB;
 
 -- Insere dados de exemplo
