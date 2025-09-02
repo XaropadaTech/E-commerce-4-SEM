@@ -91,6 +91,7 @@ public String autenticar(@RequestParam String email,
 
         return "paginabko";
     }
+    
 
     @GetMapping("/listaProdutos")
     public String mostrarListaProdutos(HttpSession session, Model model) {
@@ -150,84 +151,92 @@ public String autenticar(@RequestParam String email,
         }
     }
 
-    @PostMapping("/usuario/salvar-alteracao")
-    public String salvarAlteracaoUsuario(
-            @ModelAttribute Usuario usuario,
-            @RequestParam String confirmarSenha,
-            RedirectAttributes redirectAttributes,
-            Model model,
-            HttpSession session) {
+   @PostMapping("/usuario/salvar-alteracao")
+public String salvarAlteracaoUsuario(
+        @ModelAttribute Usuario usuario,
+        @RequestParam String confirmarSenha,
+        RedirectAttributes redirectAttributes,
+        Model model,
+        HttpSession session) {
 
-        // Pega o email do usuário logado na sessão
-        String emailLogado = (String) session.getAttribute("emailUsuario");
+    // Pega o email do usuário logado na sessão
+    String emailLogado = (String) session.getAttribute("emailUsuario");
 
-        Optional<Usuario> usuarioExistente = usuarioRepository.findById(usuario.getId());
+    Optional<Usuario> usuarioExistente = usuarioRepository.findById(usuario.getId());
 
-        if (usuarioExistente.isPresent()) {
-            Usuario u = usuarioExistente.get();
+    if (usuarioExistente.isPresent()) {
+        Usuario u = usuarioExistente.get();
 
-            // Normaliza CPF (opcional, caso salve só dígitos)
-            String cpfNovo = usuario.getCpf() != null ? usuario.getCpf().replaceAll("\\D", "") : null;
-            String emailNovo = usuario.getEmail();
+        // Normaliza CPF (opcional, caso salve só dígitos)
+        String cpfNovo = usuario.getCpf() != null ? usuario.getCpf().replaceAll("\\D", "") : null;
+        String emailNovo = usuario.getEmail();
 
-            boolean mudouEmail = emailNovo != null && !emailNovo.equalsIgnoreCase(u.getEmail());
-            boolean mudouCpf = cpfNovo != null && !cpfNovo.equalsIgnoreCase(u.getCpf());
+        boolean mudouEmail = emailNovo != null && !emailNovo.equalsIgnoreCase(u.getEmail());
+        boolean mudouCpf = cpfNovo != null && !cpfNovo.equalsIgnoreCase(u.getCpf());
 
-            // Checagem de duplicidade se mudou o e-mail
-            if (mudouEmail && usuarioRepository.existsByEmail(emailNovo)) {
-                redirectAttributes.addFlashAttribute("erro", "Já existe um usuário com esse e-mail.");
-                redirectAttributes.addFlashAttribute("usuario", usuario);
-                return "redirect:/alterarUsuario?id=" + usuario.getId();
-            }
-
-            // Checagem de duplicidade se mudou o CPF
-            if (mudouCpf && usuarioRepository.existsByCpf(cpfNovo)) {
-                redirectAttributes.addFlashAttribute("erro", "Já existe um usuário com esse CPF.");
-                redirectAttributes.addFlashAttribute("usuario", usuario);
-                return "redirect:/alterarUsuario?id=" + usuario.getId();
-            }
-
-            // Atualiza dados básicos
-            u.setNome(usuario.getNome());
-
-            if (mudouCpf) {
-                u.setCpf(cpfNovo);
-            }
-            if (mudouEmail) {
-                u.setEmail(emailNovo);
-            }
-
-            // Atualização de senha (opcional)
-            if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
-                if (usuario.getSenha().equals(confirmarSenha)) {
-                    // TODO: aplicar hash (BCrypt) aqui para maior segurança
-                    u.setSenha(usuario.getSenha());
-                } else {
-                    redirectAttributes.addFlashAttribute("erro", "As senhas não coincidem.");
-                    return "redirect:/alterarUsuario?id=" + usuario.getId();
-                }
-            }
-
-            // ALTERAÇÃO DO GRUPO: só se não for o próprio usuário logado
-            if (!u.getEmail().equalsIgnoreCase(emailLogado)) {
-                // Altera o grupo conforme selecionado no formulário
-                u.setGrupo(usuario.getGrupo());
-            }
-
-            try {
-                usuarioRepository.save(u);
-                redirectAttributes.addFlashAttribute("sucesso", "Usuário alterado com sucesso!");
-                return "redirect:/listaUsuarios";
-            } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                redirectAttributes.addFlashAttribute("erro", "E-mail ou CPF já cadastrado.");
-                redirectAttributes.addFlashAttribute("usuario", usuario);
-                return "redirect:/alterarUsuario?id=" + usuario.getId();
-            }
+        // Checagem de duplicidade se mudou o e-mail
+        if (mudouEmail && usuarioRepository.existsByEmail(emailNovo)) {
+            redirectAttributes.addFlashAttribute("erro", "Já existe um usuário com esse e-mail.");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/alterarUsuario?id=" + usuario.getId();
         }
 
-        redirectAttributes.addFlashAttribute("erro", "Usuário não encontrado.");
-        return "redirect:/listaUsuarios";
+        // Checagem de duplicidade se mudou o CPF
+        if (mudouCpf && usuarioRepository.existsByCpf(cpfNovo)) {
+            redirectAttributes.addFlashAttribute("erro", "Já existe um usuário com esse CPF.");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/alterarUsuario?id=" + usuario.getId();
+        }
+
+        // Atualiza dados básicos
+        u.setNome(usuario.getNome());
+
+        if (mudouCpf) {
+            u.setCpf(cpfNovo);
+        }
+        if (mudouEmail) {
+            u.setEmail(emailNovo);
+        }
+
+        // Atualização de senha (opcional)
+        if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
+            if (!usuario.getSenha().equals(confirmarSenha)) {
+                redirectAttributes.addFlashAttribute("erro", "As senhas não coincidem.");
+                return "redirect:/alterarUsuario?id=" + usuario.getId();
+            }
+
+            // aplica hash (BCrypt) apenas se não estiver já em hash
+            String senhaNova = usuario.getSenha();
+            boolean jaEhHashBCrypt = senhaNova.startsWith("$2a$") || senhaNova.startsWith("$2b$");
+
+            if (!jaEhHashBCrypt) {
+                senhaNova = passwordEncoder.encode(senhaNova);
+            }
+
+            u.setSenha(senhaNova);
+        }
+
+        // ALTERAÇÃO DO GRUPO: só se não for o próprio usuário logado
+        if (!u.getEmail().equalsIgnoreCase(emailLogado)) {
+            // Altera o grupo conforme selecionado no formulário
+            u.setGrupo(usuario.getGrupo());
+        }
+
+        try {
+            usuarioRepository.save(u);
+            redirectAttributes.addFlashAttribute("sucesso", "Usuário alterado com sucesso!");
+            return "redirect:/listaUsuarios";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("erro", "E-mail ou CPF já cadastrado.");
+            redirectAttributes.addFlashAttribute("usuario", usuario);
+            return "redirect:/alterarUsuario?id=" + usuario.getId();
+        }
     }
+
+    redirectAttributes.addFlashAttribute("erro", "Usuário não encontrado.");
+    return "redirect:/listaUsuarios";
+}
+
 
     @PostMapping("/usuario/alterar-status")
     public String alterarStatusUsuario(@RequestParam Long id) {
@@ -323,5 +332,7 @@ public String autenticar(@RequestParam String email,
         session.invalidate(); // invalida a sessão atual
         return "redirect:/login"; // redireciona para a página de login
     }
+
+    
 
 }
