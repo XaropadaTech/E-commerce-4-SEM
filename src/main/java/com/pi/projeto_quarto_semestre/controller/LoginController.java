@@ -91,19 +91,6 @@ public String autenticar(@RequestParam String email,
 
         return "paginabko";
     }
-    
-
-    @GetMapping("/listaProdutos")
-    public String mostrarListaProdutos(HttpSession session, Model model) {
-        String grupo = (String) session.getAttribute("grupoUsuario"); // mesmo nome usado no login
-        if (grupo == null) {
-            return "redirect:/login"; // se não estiver logado, redireciona para login
-        }
-
-        model.addAttribute("grupo", grupo);
-
-        return "listaProdutos";
-    }
 
     @GetMapping("/listaUsuarios")
     public String mostrarListaUsuarios(

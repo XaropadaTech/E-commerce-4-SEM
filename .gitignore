@@ -31,7 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
-<<<<<<< HEAD
-E-commerce-4-SEM/
-=======
->>>>>>> 0e1853c439afff6804347595d1468853169d8335
+
+/imagens_upload/
