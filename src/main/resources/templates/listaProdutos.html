@@ -45,8 +45,7 @@
                             <a th:href="@{/produtos/form(id=${produto.id})}" title="Alterar">✏️</a>
 
                             <!-- Botão Ativar/Inativar -->
-                            <form th:action="@{/produtos/alterar-status}" method="post" style="display: inline;">
-                                <input type="hidden" name="id" th:value="${produto.id}" />
+                            <form th:action="@{'/produtos/' + ${produto.id} + '/alternar-status'}" method="post" style="display: inline;">
                                 <button type="submit" 
                                         th:text="${produto.status} ? 'Inativar' : 'Ativar'" 
                                         onclick="return confirm('Tem certeza que deseja alterar o status deste produto?')">

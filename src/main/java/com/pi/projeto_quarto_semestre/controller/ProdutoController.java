@@ -1,19 +1,10 @@
 package com.pi.projeto_quarto_semestre.controller;
 
-import com.pi.projeto_quarto_semestre.model.Produto;
-import com.pi.projeto_quarto_semestre.model.ProdutoImagem;
-import com.pi.projeto_quarto_semestre.repository.ProdutoImagemRepository;
-import com.pi.projeto_quarto_semestre.repository.ProdutoRepository;
-
-import java.math.BigDecimal;
-
-import jakarta.servlet.http.HttpSession;
-
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
@@ -22,8 +13,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.pi.projeto_quarto_semestre.model.Produto;
+import com.pi.projeto_quarto_semestre.model.ProdutoImagem;
+import com.pi.projeto_quarto_semestre.repository.ProdutoImagemRepository;
+import com.pi.projeto_quarto_semestre.repository.ProdutoRepository;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class ProdutoController {
@@ -197,5 +198,16 @@ public class ProdutoController {
     arquivo.transferTo(destino);
 
     return novoNome;
+    }
+
+    @PostMapping("/produtos/{id}/alternar-status")
+    public String alternarStatusProdutoPost(@PathVariable Long id) {
+    Produto produto = produtoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+    produto.setStatus(!produto.getStatus());
+    produtoRepository.save(produto);
+
+    return "redirect:/listaProdutos";
 }
 }
