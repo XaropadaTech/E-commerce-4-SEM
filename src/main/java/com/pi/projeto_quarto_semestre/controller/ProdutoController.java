@@ -74,73 +74,121 @@ public class ProdutoController {
     }
 
     @GetMapping("/produtos/form")
-    public String abrirFormulario(@RequestParam(required = false) Long id, Model model, HttpSession session) {
-        String grupo = (String) session.getAttribute("grupoUsuario");
-        if (grupo == null) {
-            return "redirect:/login";
-        }
-        model.addAttribute("grupo", grupo);
-
-        Produto produto = new Produto();
-
-        if (id != null) {
-            produto = produtoRepository.findById(id).orElse(new Produto());
-        }
-
-        if (produto.getId() != null) {
-            List<ProdutoImagem> imagens = produtoImagemRepository.findByProdutoId(id);
-            produto.setImagens(imagens);
-        }
-
-        model.addAttribute("produto", produto);
-
-        return "formProduto";
+public String abrirFormulario(@RequestParam(required = false) Long id,
+                              Model model,
+                              HttpSession session) {
+    String grupo = (String) session.getAttribute("grupoUsuario");
+    if (grupo == null) {
+        return "redirect:/login";
     }
 
-    @PostMapping("/produtos/salvar")
-    public String salvarProduto(
-            @RequestParam(value = "id", required = false) Long id,
-            @RequestParam("nome") String nome,
-            @RequestParam(value = "avaliacao", required = false) Double avaliacao,
-            @RequestParam("descricao") String descricao,
-            @RequestParam("preco") Double preco,
-            @RequestParam("qtdEstoque") Integer qtdEstoque,
-            @RequestParam(value = "status", required = false) Boolean status,
-            @RequestParam(value = "imagens") MultipartFile[] imagens,
-            @RequestParam(value = "imagemPrincipal", required = false) String imagemPrincipal
-    ) throws IOException {
+    boolean somenteEstoque = "ESTOQUISTA".equalsIgnoreCase(grupo);
 
-        Produto produtoSalvo;
+    // Estoquista não pode abrir form sem ID (bloqueia criação)
+    if (somenteEstoque && id == null) {
+        return "redirect:/listaProdutos";
+    }
 
-        if (id != null) {
-            produtoSalvo = produtoRepository.findById(id).orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-        } else {
-            produtoSalvo = new Produto();
+    Produto produto = new Produto();
+    if (id != null) {
+        produto = produtoRepository.findById(id).orElse(new Produto());
+    }
+
+    // Se já existir produto, carregar imagens
+    if (produto.getId() != null) {
+        List<ProdutoImagem> imagens = produtoImagemRepository.findByProdutoId(produto.getId());
+        produto.setImagens(imagens);
+    }
+
+    model.addAttribute("grupo", grupo);
+    model.addAttribute("somenteEstoque", somenteEstoque);
+    model.addAttribute("produto", produto);
+
+    return "formProduto";
+}
+
+
+   @PostMapping("/produtos/salvar")
+public String salvarProduto(
+        @RequestParam(value = "id", required = false) Long id,
+        @RequestParam(value = "nome", required = false) String nome,                 // <- agora opcional
+        @RequestParam(value = "avaliacao", required = false) Double avaliacao,
+        @RequestParam(value = "descricao", required = false) String descricao,       // <- agora opcional
+        @RequestParam(value = "preco", required = false) Double preco,               // <- agora opcional
+        @RequestParam("qtdEstoque") Integer qtdEstoque,                              // <- estoquista envia só isso (além do id)
+        @RequestParam(value = "status", required = false) Boolean status,
+        @RequestParam(value = "imagens", required = false) MultipartFile[] imagens,
+        @RequestParam(value = "imagemPrincipal", required = false) String imagemPrincipal,
+        HttpSession session
+) throws IOException {
+
+    String grupo = (String) session.getAttribute("grupoUsuario");
+    if (grupo == null) {
+        return "redirect:/login";
+    }
+
+    boolean somenteEstoque = "ESTOQUISTA".equalsIgnoreCase(grupo);
+
+    // --- FLUXO RESTRITO: ESTOQUISTA SÓ PODE ATUALIZAR QUANTIDADE ---
+    if (somenteEstoque) {
+        if (id == null) {
+            // Estoquista não cria produto
+            return "redirect:/listaProdutos";
         }
 
-        produtoSalvo.setNome(nome);
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
-        if (avaliacao != null && avaliacao >= 1.0 && avaliacao <= 5.0) {
-            produtoSalvo.setAvaliacao(BigDecimal.valueOf(avaliacao));
-        } else {
-            produtoSalvo.setAvaliacao(BigDecimal.valueOf(3.0));
+        if (qtdEstoque == null || qtdEstoque < 0) {
+            // Regra simples de validação
+            return "redirect:/produtos/form?id=" + id;
         }
 
-        produtoSalvo.setDescricao(descricao);
+        produto.setQtdEstoque(qtdEstoque);
+        produtoRepository.save(produto); // reflete no banco (H15)
+        return "redirect:/listaProdutos";
+    }
 
-        if (preco != null && preco > 0) {
-            produtoSalvo.setPreco(BigDecimal.valueOf(preco));
-        } else {
-            throw new RuntimeException("Preço inválido! O preço deve ser maior que zero.");
-        }
+    // --- FLUXO NORMAL (ADMIN/OUTROS GRUPOS) ---
+    // Aqui os campos que ficaram "required=false" no RequestParam
+    // são verificados manualmente para evitar 400 quando o form tiver campos desabilitados em cenários específicos.
+    if (nome == null || nome.isBlank()) {
+        throw new RuntimeException("Nome é obrigatório.");
+    }
+    if (descricao == null) {
+        descricao = ""; // se quiser permitir vazio
+    }
+    if (preco == null || preco <= 0) {
+        throw new RuntimeException("Preço inválido! O preço deve ser maior que zero.");
+    }
 
-        produtoSalvo.setQtdEstoque(qtdEstoque);
-        produtoSalvo.setStatus(status != null ? status : true);
+    Produto produtoSalvo;
+    if (id != null) {
+        produtoSalvo = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+    } else {
+        produtoSalvo = new Produto();
+    }
 
-        produtoSalvo = produtoRepository.save(produtoSalvo);
+    produtoSalvo.setNome(nome);
 
-        // Salvar novas imagens
-        List<ProdutoImagem> imagensSalvas = new ArrayList<>();
+    if (avaliacao != null && avaliacao >= 1.0 && avaliacao <= 5.0) {
+        produtoSalvo.setAvaliacao(BigDecimal.valueOf(avaliacao));
+    } else {
+        // default
+        produtoSalvo.setAvaliacao(BigDecimal.valueOf(3.0));
+    }
+
+    produtoSalvo.setDescricao(descricao);
+    produtoSalvo.setPreco(BigDecimal.valueOf(preco));
+    produtoSalvo.setQtdEstoque(qtdEstoque);
+    produtoSalvo.setStatus(status != null ? status : true);
+
+    produtoSalvo = produtoRepository.save(produtoSalvo);
+
+    // Salvar novas imagens (somente para não-estoquista)
+    List<ProdutoImagem> imagensSalvas = new ArrayList<>();
+    if (imagens != null && imagens.length > 0) {
         for (MultipartFile arquivo : imagens) {
             if (!arquivo.isEmpty()) {
                 String novoNome = salvarArquivoNoDiretorio(arquivo);
@@ -154,30 +202,33 @@ public class ProdutoController {
                 imagensSalvas.add(produtoImagemRepository.save(imagem));
             }
         }
-
-        // Atualizar status da imagem principal
-        if (imagemPrincipal != null) {
-            List<ProdutoImagem> todasImagens = produtoImagemRepository.findByProdutoId(produtoSalvo.getId());
-
-            for (ProdutoImagem img : todasImagens) {
-                if (imagemPrincipal.startsWith("nova-")) {
-                    // Exemplo: nova-0, nova-1 ...
-                    int indice = Integer.parseInt(imagemPrincipal.substring(5));
-                    if (indice < imagensSalvas.size() && imagensSalvas.get(indice).getId().equals(img.getId())) {
-                        img.setImagemPadrao(true);
-                    } else {
-                        img.setImagemPadrao(false);
-                    }
-                } else {
-                    boolean isPrincipal = img.getId().toString().equals(imagemPrincipal);
-                    img.setImagemPadrao(isPrincipal);
-                }
-                produtoImagemRepository.save(img);
-            }
-        }
-
-        return "redirect:/listaProdutos";
     }
+
+    // Atualizar status da imagem principal (se informado)
+    if (imagemPrincipal != null) {
+        List<ProdutoImagem> todasImagens = produtoImagemRepository.findByProdutoId(produtoSalvo.getId());
+
+        for (ProdutoImagem img : todasImagens) {
+            if (imagemPrincipal.startsWith("nova-")) {
+                // Ex.: nova-0, nova-1 ...
+                int indice = Integer.parseInt(imagemPrincipal.substring(5));
+                boolean principalNova = (imagensSalvas != null
+                        && indice >= 0
+                        && indice < imagensSalvas.size()
+                        && imagensSalvas.get(indice).getId().equals(img.getId()));
+                img.setImagemPadrao(principalNova);
+            } else {
+                boolean isPrincipal = img.getId().toString().equals(imagemPrincipal);
+                img.setImagemPadrao(isPrincipal);
+            }
+            produtoImagemRepository.save(img);
+        }
+    }
+
+    return "redirect:/listaProdutos";
+}
+
+
 
     public String salvarArquivoNoDiretorio(MultipartFile arquivo) throws IOException {
     // pega a pasta onde o projeto está rodando + "/imagens_upload"

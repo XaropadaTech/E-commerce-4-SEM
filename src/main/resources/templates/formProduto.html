@@ -8,61 +8,67 @@
     <h1 th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'">Produto</h1>
 
     <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
-        <input type="hidden" th:field="*{id}" />
+  <input type="hidden" th:field="*{id}" />
 
-        <div>
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" th:field="*{nome}" maxlength="200" required />
-        </div>
+  <div>
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" th:field="*{nome}" maxlength="200" required
+           th:attr="disabled=${somenteEstoque}" />
+  </div>
 
-        <div>
-            <label for="avaliacao">Avaliação (1.0 a 5.0):</label>
-            <input type="number" id="avaliacao" th:field="*{avaliacao}" step="0.5" min="1.0" max="5.0" />
-        </div>
+  <div>
+    <label for="avaliacao">Avaliação (1.0 a 5.0):</label>
+    <input type="number" id="avaliacao" th:field="*{avaliacao}" step="0.5" min="1.0" max="5.0"
+           th:attr="disabled=${somenteEstoque}" />
+  </div>
 
-        <div>
-            <label for="descricao">Descrição:</label>
-            <textarea id="descricao" th:field="*{descricao}" maxlength="2000"></textarea>
-        </div>
+  <div>
+    <label for="descricao">Descrição:</label>
+    <textarea id="descricao" th:field="*{descricao}" maxlength="2000"
+              th:attr="disabled=${somenteEstoque}"></textarea>
+  </div>
 
-        <div>
-            <label for="preco">Preço:</label>
-            <input type="number" id="preco" th:field="*{preco}" step="0.01" min="0" required />
-        </div>
+  <div>
+    <label for="preco">Preço:</label>
+    <input type="number" id="preco" th:field="*{preco}" step="0.01" min="0" required
+           th:attr="disabled=${somenteEstoque}" />
+  </div>
 
-        <div>
-            <label for="qtdEstoque">Quantidade em Estoque:</label>
-            <input type="number" id="qtdEstoque" th:field="*{qtdEstoque}" min="0" required />
-        </div>
+  <div>
+    <label for="qtdEstoque">Quantidade em Estoque:</label>
+    <!-- ÚNICO campo editável para ESTOQUISTA -->
+    <input type="number" id="qtdEstoque" th:field="*{qtdEstoque}" min="0" required />
+  </div>
 
-        <!-- Upload de imagens -->
-        <div>
-            <label for="imagens">Imagens do Produto:</label>
-            <input type="file" id="imagens" name="imagens" multiple accept="image/*" />
-            <p>Escolha a imagem principal após o upload.</p>
-        </div>
+  <!-- Upload de imagens: ocultar para ESTOQUISTA -->
+  <div th:if="${!somenteEstoque}">
+    <label for="imagens">Imagens do Produto:</label>
+    <input type="file" id="imagens" name="imagens" multiple accept="image/*" />
+    <p>Escolha a imagem principal após o upload.</p>
+  </div>
 
-        <!-- Exibição das imagens (novas e já cadastradas juntas) -->
-        <section>
-            <h3>Imagens do Produto</h3>
-            <ul id="imagensList">
-                <!-- Imagens já cadastradas -->
-                <li th:each="img : ${produto.imagens}">
-                    <img th:src="@{${img.caminhoImagem}}" alt="Imagem do produto" width="100" />
-                    <label>
-                        <input type="radio" name="imagemPrincipal" th:value="${img.id}" th:checked="${img.imagemPadrao}" />
-                        Imagem Principal
-                    </label>
-                    <a th:href="@{/produtos/excluirImagem?imagemId=${img.id}}">Excluir</a>
-                </li>
-            </ul>
-        </section>
+  <!-- Exibição das imagens: ocultar para ESTOQUISTA -->
+  <section th:if="${!somenteEstoque}">
+    <h3>Imagens do Produto</h3>
+    <ul id="imagensList">
+      <li th:each="img : ${produto.imagens}">
+        <img th:src="@{${img.caminhoImagem}}" alt="Imagem do produto" width="100" />
+        <label>
+          <input type="radio" name="imagemPrincipal" th:value="${img.id}" th:checked="${img.imagemPadrao}" />
+          Imagem Principal
+        </label>
+        <a th:href="@{/produtos/excluirImagem(imagemId=${img.id})}">Excluir</a>
+      </li>
+    </ul>
+  </section>
 
-        <div>
-            <button type="submit">Salvar</button>
-            <a th:href="@{/produtos}">Cancelar</a>
-        </div>
-    </form>
+  <div>
+    <button type="submit"
+            th:text="${somenteEstoque} ? 'Atualizar quantidade' : 'Salvar'">Salvar</button>
+    <a th:href="@{/listaProdutos}">Cancelar</a>
+  </div>
+</form>
+
 
 <script>
     const inputImagens = document.getElementById('imagens');
