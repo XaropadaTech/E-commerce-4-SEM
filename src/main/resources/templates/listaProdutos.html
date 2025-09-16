@@ -4,77 +4,70 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lista de Produtos</title>
-    <link rel="stylesheet" th:href="@{/css/listaProdutos.css}" />
 </head>
 <body>
-    <main>
-        <section class="produtos-section">
-            <h2>Produtos Cadastrados</h2>
+<main>
+    <section class="produtos-section">
+        <h2>Produtos Cadastrados</h2>
 
-            <!-- Campo de busca -->
-            <form th:action="@{/listaProdutos}" method="get" class="filtro">
-                <input type="text" name="nome" placeholder="Filtrar por nome" th:value="${filtroNome}" />
-                <button type="submit">Buscar</button>
-                <a th:href="@{/listaProdutos}">Limpar</a>
-            </form>
+        <form th:action="@{/listaProdutos}" method="get" class="filtro">
+            <input type="text" name="nome" placeholder="Filtrar por nome" th:value="${filtroNome}" />
+            <button type="submit">Buscar</button>
+            <a th:href="@{/listaProdutos}">Limpar</a>
+        </form>
 
-            <!-- Tabela de produtos -->
-            <table>
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nome</th>
-                        <th>Estoque</th>
-                        <th>Preço</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="produto : ${produtos}">
-                        <td th:text="${produto.id}">001</td>
-                        <td th:text="${produto.nome}">Nome Produto</td>
-                        <td th:text="${produto.qtdEstoque}">10</td>
-                        <td th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'COMMA', 2, 'POINT')}">R$ 0,00</td>
-                        <td th:text="${produto.status} ? 'Ativo' : 'Inativo'">Status</td>
-                        <td>
-                            <!-- Botão Visualizar -->
-                            <a th:href="@{/produtos/visualizar(id=${produto.id})}" title="Visualizar">👁️</a>
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Estoque</th>
+                <th>Preço</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="produto : ${produtos}">
+                <td th:text="${produto.id}">001</td>
+                <td th:text="${produto.nome}">Nome Produto</td>
+                <td th:text="${produto.qtdEstoque}">10</td>
+                <td th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+                <td th:text="${produto.status} ? 'Ativo' : 'Inativo'">Status</td>
+                <td>
+                    <a th:href="@{/produtos/form(id=${produto.id})}" title="Alterar">✏️ Alterar</a>
 
-                            <!-- Botão Alterar -->
-                            <a th:href="@{/produtos/form(id=${produto.id})}" title="Alterar">✏️</a>
+                    <span th:if="${grupo == 'administrador'}">
+                                <a th:href="@{/produtos/visualizar(id=${produto.id})}" title="Visualizar">👁️ Visualizar</a>
+                                <form th:action="@{'/produtos/' + ${produto.id} + '/alternar-status'}" method="post" style="display: inline;">
+                                    <button type="submit"
+                                            th:text="${produto.status} ? 'Inativar' : 'Ativar'"
+                                            onclick="return confirm('Tem certeza que deseja alterar o status deste produto?')">
+                                    </button>
+                                </form>
+                            </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
 
-                            <!-- Botão Ativar/Inativar -->
-                            <form th:action="@{'/produtos/' + ${produto.id} + '/alternar-status'}" method="post" style="display: inline;">
-                                <button type="submit" 
-                                        th:text="${produto.status} ? 'Inativar' : 'Ativar'" 
-                                        onclick="return confirm('Tem certeza que deseja alterar o status deste produto?')">
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- Paginação -->
-            <div class="paginacao" th:if="${totalPaginas != null and totalPaginas > 0}">
+        <div class="paginacao" th:if="${totalPaginas > 1}">
                 <span th:if="${paginaAtual > 0}">
                     <a th:href="@{/listaProdutos(page=${paginaAtual - 1}, nome=${filtroNome})}">Anterior</a>
                 </span>
-                <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
-                    <a th:href="@{/listaProdutos(page=${i}, nome=${filtroNome})}" 
-                       th:text="${i + 1}" 
+            <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
+                    <a th:href="@{/listaProdutos(page=${i}, nome=${filtroNome})}"
+                       th:text="${i + 1}"
                        th:classappend="${i == paginaAtual} ? ' pagina-ativa' : ''">
                     </a>
                 </span>
-                <span th:if="${paginaAtual < totalPaginas - 1}">
+            <span th:if="${paginaAtual < totalPaginas - 1}">
                     <a th:href="@{/listaProdutos(page=${paginaAtual + 1}, nome=${filtroNome})}">Próxima</a>
                 </span>
-            </div>
+        </div>
 
-            <!-- Botão flutuante para novo produto -->
-            <a th:href="@{/produtos/form}" class="btn-fab" title="Novo Produto">+</a>
-        </section>
-    </main>
+        <a th:href="@{/produtos/form}" class="btn-fab" title="Novo Produto" th:if="${grupo == 'administrador'}">+</a>
+    </section>
+</main>
 </body>
 </html>
