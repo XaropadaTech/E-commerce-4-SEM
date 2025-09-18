@@ -251,6 +251,26 @@ public String salvarProduto(
     return novoNome;
     }
 
+    @GetMapping("/produtos/visualizar")
+    public String visualizarProduto(@RequestParam Long id, Model model, HttpSession session) {
+        String grupo = (String) session.getAttribute("grupoUsuario");
+        if (grupo == null) {
+            return "redirect:/login";
+        }
+
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        // Carregar imagens do produto
+        List<ProdutoImagem> imagens = produtoImagemRepository.findByProdutoId(produto.getId());
+        produto.setImagens(imagens);
+
+        model.addAttribute("produto", produto);
+        model.addAttribute("grupo", grupo);
+
+        return "visualizarProduto";
+    }
+
     @PostMapping("/produtos/{id}/alternar-status")
     public String alternarStatusProdutoPost(@PathVariable Long id) {
     Produto produto = produtoRepository.findById(id)
