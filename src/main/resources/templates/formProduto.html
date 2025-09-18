@@ -2,109 +2,432 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <title>Cadastro de Produto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'">Cadastro de Produto</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <style>
+        .image-upload-area {
+            border: 3px dashed var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 40px;
+            text-align: center;
+            background: var(--background-light);
+            transition: var(--transition);
+            cursor: pointer;
+            margin-bottom: 25px;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .image-item {
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .image-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .image-controls {
+            padding: 15px;
+            background: white;
+        }
+
+        .principal-radio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .principal-radio input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .principal-radio label {
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .principal-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--success-gradient);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .delete-btn {
+            background: var(--danger-gradient);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .estoque-only-notice {
+            background: var(--warning-gradient);
+            color: var(--text-dark);
+            padding: 20px;
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .images-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1 th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'">Produto</h1>
+    <a th:href="@{/listaProdutos}" class="back-button">
+        ← Voltar para Lista
+    </a>
 
-    <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
-  <input type="hidden" th:field="*{id}" />
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h1 th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'">Produto</h1>
+                <p th:text="${produto.id != null} ? 'Atualize as informações do produto' : 'Cadastre um novo produto no sistema'">
+                    Gerencie as informações do produto
+                </p>
+            </div>
 
-  <div>
-    <label for="nome">Nome:</label>
-    <input type="text" id="nome" th:field="*{nome}" maxlength="200" required
-           th:attr="disabled=${somenteEstoque}" />
-  </div>
+            <div class="form-container">
+                <div th:if="${somenteEstoque}" class="estoque-only-notice">
+                    ⚠️ Modo Estoquista: Você pode alterar apenas a quantidade em estoque
+                </div>
 
-  <div>
-    <label for="avaliacao">Avaliação (1.0 a 5.0):</label>
-    <input type="number" id="avaliacao" th:field="*{avaliacao}" step="0.5" min="1.0" max="5.0"
-           th:attr="disabled=${somenteEstoque}" />
-  </div>
+                <form th:action="@{/produtos/salvar}" method="post" th:object="${produto}" enctype="multipart/form-data">
+                    <input type="hidden" th:field="*{id}" />
 
-  <div>
-    <label for="descricao">Descrição:</label>
-    <textarea id="descricao" th:field="*{descricao}" maxlength="2000"
-              th:attr="disabled=${somenteEstoque}"></textarea>
-  </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nome">Nome do Produto</label>
+                            <input type="text" id="nome" th:field="*{nome}" maxlength="200" required
+                                   class="form-control" placeholder="Digite o nome do produto"
+                                   th:attr="disabled=${somenteEstoque}" />
+                        </div>
 
-  <div>
-    <label for="preco">Preço:</label>
-    <input type="number" id="preco" th:field="*{preco}" step="0.01" min="0" required
-           th:attr="disabled=${somenteEstoque}" />
-  </div>
+                        <div class="form-group">
+                            <label for="preco">Preço (R$)</label>
+                            <input type="number" id="preco" th:field="*{preco}" step="0.01" min="0" required
+                                   class="form-control" placeholder="0,00"
+                                   th:attr="disabled=${somenteEstoque}" />
+                        </div>
+                    </div>
 
-  <div>
-    <label for="qtdEstoque">Quantidade em Estoque:</label>
-    <!-- ÚNICO campo editável para ESTOQUISTA -->
-    <input type="number" id="qtdEstoque" th:field="*{qtdEstoque}" min="0" required />
-  </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="avaliacao">Avaliação (1.0 a 5.0)</label>
+                            <input type="number" id="avaliacao" th:field="*{avaliacao}" step="0.1" min="1.0" max="5.0"
+                                   class="form-control" placeholder="3.0"
+                                   th:attr="disabled=${somenteEstoque}" />
+                        </div>
 
-  <!-- Upload de imagens: ocultar para ESTOQUISTA -->
-  <div th:if="${!somenteEstoque}">
-    <label for="imagens">Imagens do Produto:</label>
-    <input type="file" id="imagens" name="imagens" multiple accept="image/*" />
-    <p>Escolha a imagem principal após o upload.</p>
-  </div>
+                        <div class="form-group">
+                            <label for="qtdEstoque">Quantidade em Estoque</label>
+                            <input type="number" id="qtdEstoque" th:field="*{qtdEstoque}" min="0" required 
+                                   class="form-control" placeholder="0" />
+                        </div>
+                    </div>
 
-  <!-- Exibição das imagens: ocultar para ESTOQUISTA -->
-  <section th:if="${!somenteEstoque}">
-    <h3>Imagens do Produto</h3>
-    <ul id="imagensList">
-      <li th:each="img : ${produto.imagens}">
-        <img th:src="@{${img.caminhoImagem}}" alt="Imagem do produto" width="100" />
-        <label>
-          <input type="radio" name="imagemPrincipal" th:value="${img.id}" th:checked="${img.imagemPadrao}" />
-          Imagem Principal
-        </label>
-        <a th:href="@{/produtos/excluirImagem(imagemId=${img.id})}">Excluir</a>
-      </li>
-    </ul>
-  </section>
+                    <div class="form-group">
+                        <label for="descricao">Descrição do Produto</label>
+                        <textarea id="descricao" th:field="*{descricao}" maxlength="2000"
+                                  class="form-control" placeholder="Descreva as características e benefícios do produto..."
+                                  th:attr="disabled=${somenteEstoque}"></textarea>
+                    </div>
 
-  <div>
-    <button type="submit"
-            th:text="${somenteEstoque} ? 'Atualizar quantidade' : 'Salvar'">Salvar</button>
-    <a th:href="@{/listaProdutos}">Cancelar</a>
-  </div>
-</form>
+                    <!-- Upload de imagens: ocultar para ESTOQUISTA -->
+                    <div th:if="${!somenteEstoque}" class="form-group">
+                        <label>Imagens do Produto</label>
+                        <div class="image-upload-area" onclick="document.getElementById('imagens').click()">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">Clique aqui ou arraste as imagens</div>
+                            <div class="upload-hint">Formatos aceitos: JPG, PNG, GIF (máx. 10MB cada)</div>
+                        </div>
+                        <input type="file" id="imagens" name="imagens" multiple accept="image/*" style="display: none;" />
+                    </div>
 
+                    <!-- Exibição das imagens: ocultar para ESTOQUISTA -->
+                    <div th:if="${!somenteEstoque}" class="form-group">
+                        <div id="imagesContainer">
+                            <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}" class="images-grid" id="imagensList">
+                                <div th:each="img : ${produto.imagens}" class="image-item">
+                                    <div th:if="${img.imagemPadrao}" class="principal-badge">Principal</div>
+                                    <img th:src="@{${img.caminhoImagem}}" alt="Imagem do produto" />
+                                    <div class="image-controls">
+                                        <div class="principal-radio">
+                                            <input type="radio" name="imagemPrincipal" th:value="${img.id}" 
+                                                   th:checked="${img.imagemPadrao}" th:id="'radio-' + ${img.id}" />
+                                            <label th:for="'radio-' + ${img.id}">Imagem Principal</label>
+                                        </div>
+                                        <a th:href="@{/produtos/excluirImagem(imagemId=${img.id})}" 
+                                           class="delete-btn"
+                                           onclick="return confirm('Tem certeza que deseja excluir esta imagem?')">
+                                            🗑️ Excluir
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <span th:text="${somenteEstoque} ? '📦 Atualizar Estoque' : (${produto.id != null} ? '💾 Salvar Alterações' : '➕ Cadastrar Produto')">
+                                Salvar
+                            </span>
+                        </button>
+                        <a th:href="@{/listaProdutos}" class="btn btn-secondary btn-lg">
+                            ❌ Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 <script>
     const inputImagens = document.getElementById('imagens');
-    const imagensList = document.getElementById('imagensList');
+    const uploadArea = document.querySelector('.image-upload-area');
+    const imagesContainer = document.getElementById('imagesContainer');
+    let imagensList = document.getElementById('imagensList');
+    let novasImagens = [];
 
-    inputImagens.addEventListener('change', function () {
-        const arquivos = this.files;
+    // Criar grid se não existir
+    if (!imagensList) {
+        imagensList = document.createElement('div');
+        imagensList.id = 'imagensList';
+        imagensList.className = 'images-grid';
+        imagesContainer.appendChild(imagensList);
+    }
 
-        for (let i = 0; i < arquivos.length; i++) {
-            const arquivo = arquivos[i];
-            if (!arquivo.type.startsWith('image/')) continue;
+    // Drag & Drop functionality
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        processFiles(files);
+    });
+
+    // File input change
+    inputImagens.addEventListener('change', function() {
+        processFiles(this.files);
+    });
+
+    function processFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            const arquivo = files[i];
+            if (!arquivo.type.startsWith('image/')) {
+                alert('Arquivo ' + arquivo.name + ' não é uma imagem válida.');
+                continue;
+            }
+
+            if (arquivo.size > 10 * 1024 * 1024) { // 10MB
+                alert('Arquivo ' + arquivo.name + ' é muito grande. Máximo 10MB.');
+                continue;
+            }
 
             const reader = new FileReader();
-            reader.onload = function (e) {
-                const li = document.createElement('li');
-
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.width = 100;
-                img.alt = 'Preview';
-
-                const label = document.createElement('label');
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'imagemPrincipal';
-                radio.value = 'nova-' + i;
-
-                label.appendChild(radio);
-                label.appendChild(document.createTextNode(' Imagem Principal'));
-
-                li.appendChild(img);
-                li.appendChild(label);
-
-                imagensList.appendChild(li);
+            reader.onload = function(e) {
+                createImagePreview(e.target.result, arquivo.name, novasImagens.length);
+                novasImagens.push(arquivo);
             };
             reader.readAsDataURL(arquivo);
+        }
+    }
+
+    function createImagePreview(src, fileName, index) {
+        const imageItem = document.createElement('div');
+        imageItem.className = 'image-item';
+        
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Preview de ' + fileName;
+
+        const controls = document.createElement('div');
+        controls.className = 'image-controls';
+
+        const radioDiv = document.createElement('div');
+        radioDiv.className = 'principal-radio';
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'imagemPrincipal';
+        radio.value = 'nova-' + index;
+        radio.id = 'radio-nova-' + index;
+
+        const label = document.createElement('label');
+        label.htmlFor = 'radio-nova-' + index;
+        label.textContent = 'Imagem Principal';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '🗑️ Remover';
+        deleteBtn.onclick = function() {
+            imageItem.remove();
+            novasImagens.splice(index, 1);
+            updateFileInput();
+        };
+
+        radioDiv.appendChild(radio);
+        radioDiv.appendChild(label);
+        controls.appendChild(radioDiv);
+        controls.appendChild(deleteBtn);
+
+        imageItem.appendChild(img);
+        imageItem.appendChild(controls);
+        
+        imagensList.appendChild(imageItem);
+
+        // Se for a primeira imagem, marcar como principal
+        if (document.querySelectorAll('input[name="imagemPrincipal"]:checked').length === 0) {
+            radio.checked = true;
+        }
+    }
+
+    function updateFileInput() {
+        // Criar um novo DataTransfer para atualizar o input
+        const dt = new DataTransfer();
+        novasImagens.forEach(file => dt.items.add(file));
+        inputImagens.files = dt.files;
+    }
+
+    // Atualizar badges de "Principal" quando radio buttons mudarem
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'imagemPrincipal') {
+            // Remover todas as badges existentes
+            document.querySelectorAll('.principal-badge').forEach(badge => badge.remove());
+            
+            // Adicionar badge na imagem selecionada
+            const selectedRadio = document.querySelector('input[name="imagemPrincipal"]:checked');
+            if (selectedRadio) {
+                const imageItem = selectedRadio.closest('.image-item');
+                if (imageItem && !imageItem.querySelector('.principal-badge')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'principal-badge';
+                    badge.textContent = 'Principal';
+                    imageItem.appendChild(badge);
+                }
+            }
+        }
+    });
+
+    // Inicializar badges existentes
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkedRadio = document.querySelector('input[name="imagemPrincipal"]:checked');
+        if (checkedRadio) {
+            const imageItem = checkedRadio.closest('.image-item');
+            if (imageItem && !imageItem.querySelector('.principal-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'principal-badge';
+                badge.textContent = 'Principal';
+                imageItem.appendChild(badge);
+            }
         }
     });
 </script>

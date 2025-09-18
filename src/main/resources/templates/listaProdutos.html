@@ -4,70 +4,348 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Lista de Produtos</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <style>
+        .product-image {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-md);
+            object-fit: cover;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .product-image:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .no-image {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-md);
+            background: var(--background-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            border: 2px dashed var(--border-color);
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .product-price {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ativo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inativo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stock-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stock-low {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        .stock-medium {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+
+        .stock-good {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-edit {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .action-edit:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .action-view {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-view:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .action-toggle {
+            background: var(--warning-color);
+            color: var(--text-dark);
+        }
+
+        .action-toggle:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .action-toggle.inativar {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .action-toggle.inativar:hover {
+            background: #c82333;
+        }
+
+        .table th {
+            position: sticky;
+            top: 0;
+            background: var(--primary-gradient);
+            color: white;
+            z-index: 10;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .actions-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-<main>
-    <section class="produtos-section">
-        <h2>Produtos Cadastrados</h2>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h1>📦 Produtos Cadastrados</h1>
+                <p>Gerencie todos os produtos do seu e-commerce</p>
+            </div>
 
-        <form th:action="@{/listaProdutos}" method="get" class="filtro">
-            <input type="text" name="nome" placeholder="Filtrar por nome" th:value="${filtroNome}" />
-            <button type="submit">Buscar</button>
-            <a th:href="@{/listaProdutos}">Limpar</a>
-        </form>
+            <div class="filter-section">
+                <form th:action="@{/listaProdutos}" method="get" class="filter-form">
+                    <div class="form-group">
+                        <label for="nome">Buscar Produto</label>
+                        <input type="text" id="nome" name="nome" class="form-control" 
+                               placeholder="Digite o nome do produto..." th:value="${filtroNome}" />
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+                            <a th:href="@{/listaProdutos}" class="btn btn-secondary">🗑️ Limpar</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
 
-        <table>
-            <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nome</th>
-                <th>Estoque</th>
-                <th>Preço</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="produto : ${produtos}">
-                <td th:text="${produto.id}">001</td>
-                <td th:text="${produto.nome}">Nome Produto</td>
-                <td th:text="${produto.qtdEstoque}">10</td>
-                <td th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
-                <td th:text="${produto.status} ? 'Ativo' : 'Inativo'">Status</td>
-                <td>
-                    <a th:href="@{/produtos/form(id=${produto.id})}" title="Alterar">✏️ Alterar</a>
+            <div class="table-container">
+                <div th:if="${produtos != null and !produtos.isEmpty()}">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Imagem</th>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Estoque</th>
+                            <th>Preço</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="produto : ${produtos}">
+                            <td>
+                                <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}">
+                                    <!-- Tentar mostrar imagem principal primeiro -->
+                                    <img th:each="img : ${produto.imagens}" 
+                                         th:if="${img.imagemPadrao}" 
+                                         th:src="@{${img.caminhoImagem}}" 
+                                         alt="Imagem do produto" 
+                                         class="product-image"
+                                         th:title="${produto.nome}" />
+                                    <!-- Se não houver imagem principal, mostrar a primeira -->
+                                    <img th:if="${produto.imagens.?[imagemPadrao == true].isEmpty()}" 
+                                         th:src="@{${produto.imagens[0].caminhoImagem}}" 
+                                         alt="Imagem do produto" 
+                                         class="product-image"
+                                         th:title="${produto.nome}" />
+                                </div>
+                                <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}" class="no-image">
+                                    📷
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">#</span><strong th:text="${produto.id}">001</strong>
+                            </td>
+                            <td>
+                                <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
+                                <div th:if="${produto.avaliacao != null}" class="text-muted" style="font-size: 0.85rem;">
+                                    ⭐ <span th:text="${#numbers.formatDecimal(produto.avaliacao, 1, 'POINT', 1, 'COMMA')}">0.0</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-info">
+                                    <span th:classappend="${produto.qtdEstoque <= 5} ? 'stock-low' : (${produto.qtdEstoque <= 20} ? 'stock-medium' : 'stock-good')"
+                                          th:text="${produto.qtdEstoque}">10</span>
+                                    <span class="text-muted">un.</span>
+                                </div>
+                                <div th:if="${produto.qtdEstoque <= 5}" class="text-danger" style="font-size: 0.8rem;">
+                                    ⚠️ Estoque baixo
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-price" th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">
+                                    R$ 0,00
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge" 
+                                      th:classappend="${produto.status} ? 'status-ativo' : 'status-inativo'"
+                                      th:text="${produto.status} ? 'Ativo' : 'Inativo'">Status</span>
+                            </td>
+                            <td>
+                                <div class="actions-group">
+                                    <a th:href="@{/produtos/form(id=${produto.id})}" 
+                                       class="action-btn action-edit" 
+                                       title="Editar produto">
+                                        ✏️ Editar
+                                    </a>
 
-                    <span th:if="${grupo == 'administrador'}">
-                                <a th:href="@{/produtos/visualizar(id=${produto.id})}" title="Visualizar">👁️ Visualizar</a>
-                                <form th:action="@{'/produtos/' + ${produto.id} + '/alternar-status'}" method="post" style="display: inline;">
-                                    <button type="submit"
-                                            th:text="${produto.status} ? 'Inativar' : 'Ativar'"
-                                            onclick="return confirm('Tem certeza que deseja alterar o status deste produto?')">
-                                    </button>
-                                </form>
-                            </span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                                    <span th:if="${grupo == 'administrador'}">
+                                        <a th:href="@{/produtos/visualizar(id=${produto.id})}" 
+                                           class="action-btn action-view" 
+                                           title="Visualizar como cliente">
+                                            👁️ Visualizar
+                                        </a>
+                                        
+                                        <form th:action="@{'/produtos/' + ${produto.id} + '/alternar-status'}" 
+                                              method="post" style="display: inline;">
+                                            <button type="submit"
+                                                    class="action-btn action-toggle"
+                                                    th:classappend="${produto.status} ? 'inativar' : ''"
+                                                    th:title="${produto.status} ? 'Inativar produto' : 'Ativar produto'"
+                                                    onclick="return confirm('Tem certeza que deseja alterar o status deste produto?')">
+                                                <span th:if="${produto.status}">🚫 Inativar</span>
+                                                <span th:if="${!produto.status}">✅ Ativar</span>
+                                            </button>
+                                        </form>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-        <div class="paginacao" th:if="${totalPaginas > 1}">
-                <span th:if="${paginaAtual > 0}">
-                    <a th:href="@{/listaProdutos(page=${paginaAtual - 1}, nome=${filtroNome})}">Anterior</a>
-                </span>
-            <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
+                <div th:if="${produtos == null or produtos.isEmpty()}" class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h3>Nenhum produto encontrado</h3>
+                    <p th:if="${filtroNome != null and !filtroNome.isEmpty()}">
+                        Não encontramos produtos com o termo "<strong th:text="${filtroNome}"></strong>".
+                        <br><a th:href="@{/listaProdutos}" class="btn btn-secondary mt-3">Ver todos os produtos</a>
+                    </p>
+                    <p th:if="${filtroNome == null or filtroNome.isEmpty()}">
+                        Comece cadastrando seu primeiro produto!
+                        <br><a th:href="@{/produtos/form}" class="btn btn-primary mt-3" th:if="${grupo == 'administrador'}">➕ Cadastrar Produto</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="pagination" th:if="${totalPaginas > 1}">
+                <a th:if="${paginaAtual > 0}" 
+                   th:href="@{/listaProdutos(page=${paginaAtual - 1}, nome=${filtroNome})}">
+                    ← Anterior
+                </a>
+                
+                <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
                     <a th:href="@{/listaProdutos(page=${i}, nome=${filtroNome})}"
                        th:text="${i + 1}"
-                       th:classappend="${i == paginaAtual} ? ' pagina-ativa' : ''">
+                       th:classappend="${i == paginaAtual} ? 'active' : ''">
                     </a>
                 </span>
-            <span th:if="${paginaAtual < totalPaginas - 1}">
-                    <a th:href="@{/listaProdutos(page=${paginaAtual + 1}, nome=${filtroNome})}">Próxima</a>
-                </span>
+                
+                <a th:if="${paginaAtual < totalPaginas - 1}" 
+                   th:href="@{/listaProdutos(page=${paginaAtual + 1}, nome=${filtroNome})}">
+                    Próxima →
+                </a>
+            </div>
         </div>
+    </div>
 
-        <a th:href="@{/produtos/form}" class="btn-fab" title="Novo Produto" th:if="${grupo == 'administrador'}">+</a>
-    </section>
-</main>
+    <a th:href="@{/produtos/form}" class="btn-fab" title="Novo Produto" th:if="${grupo == 'administrador'}">
+        ➕
+    </a>
 </body>
 </html>

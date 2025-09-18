@@ -1,54 +1,272 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" th:href="@{/css/listaUsuarios.css}">
-    <title>Lista Usuarios</title>
+    <title>Lista de Usuários</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <style>
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .user-details p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .group-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .group-administrador {
+            background: #e7f3ff;
+            color: #0066cc;
+        }
+
+        .group-estoquista {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ativo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inativo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-edit {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .action-edit:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .action-toggle {
+            background: var(--warning-color);
+            color: var(--text-dark);
+        }
+
+        .action-toggle:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .action-toggle.desativar {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .action-toggle.desativar:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .actions-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <p>lista usuarios</p>
-    <main>
-    <section class="employees-section">
-        <h2>Usuários Cadastrados</h2>
-        <form th:action="@{/listaUsuarios}" method="get" class="filtro">
-            <input type="text" name="nome" placeholder="Filtrar por nome" th:value="${filtroNome}" />
-            <button type="submit">Filtrar</button>
-            <a th:href="@{/listaUsuarios}">Limpar</a>
-</form>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Grupo</th>
-                    <th>Alterar</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="usuario : ${usuarios}">
-                    <td th:text="${usuario.nome}">Nome</td>
-                    <td th:text="${usuario.email}">Email</td>
-                    <td>
-                <form th:action="@{/usuario/alterar-status}" method="post">
-                    <input type="hidden" name="id" th:value="${usuario.id}" />
-                    <button type="submit" 
-                            th:text="${usuario.status ? 'Desativar' : 'Ativar'}"
-                            onclick="return confirm('Tem certeza que deseja alterar o status deste usuário?')">
-                    </button>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h1>👥 Usuários Cadastrados</h1>
+                <p>Gerencie todos os usuários do sistema</p>
+            </div>
+
+            <div class="filter-section">
+                <form th:action="@{/listaUsuarios}" method="get" class="filter-form">
+                    <div class="form-group">
+                        <label for="nome">Buscar Usuário</label>
+                        <input type="text" id="nome" name="nome" class="form-control" 
+                               placeholder="Digite o nome do usuário..." th:value="${filtroNome}" />
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+                            <a th:href="@{/listaUsuarios}" class="btn btn-secondary">🗑️ Limpar</a>
+                        </div>
+                    </div>
                 </form>
-            </td>
-                    <td th:text="${usuario.grupo}">Grupo</td>
-                    <td>
-                        <!-- Botão que redireciona para a página de alterar usuário -->
-                        <a th:href="@{/alterarUsuario(id=${usuario.id})}" class="btn-alterar">Alterar</a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <a th:href="@{/cadastroUsuario}" class="btn-fab" title="Novo usuário">+</a>
-    </section>
-</main>
+            </div>
+
+            <div class="table-container">
+                <div th:if="${usuarios != null and !usuarios.isEmpty()}">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Email</th>
+                            <th>Grupo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="usuario : ${usuarios}">
+                            <td>
+                                <div class="user-info">
+                                    <div class="user-avatar" th:text="${#strings.substring(usuario.nome, 0, 1).toUpperCase()}">
+                                        U
+                                    </div>
+                                    <div class="user-details">
+                                        <h4 th:text="${usuario.nome}">Nome do Usuário</h4>
+                                        <p th:text="'ID: ' + ${usuario.id}">ID: 1</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:text="${usuario.email}">email@exemplo.com</span>
+                            </td>
+                            <td>
+                                <span class="group-badge" 
+                                      th:classappend="'group-' + ${#strings.toLowerCase(usuario.grupo)}"
+                                      th:text="${usuario.grupo}">Grupo</span>
+                            </td>
+                            <td>
+                                <span class="status-badge" 
+                                      th:classappend="${usuario.status} ? 'status-ativo' : 'status-inativo'"
+                                      th:text="${usuario.status} ? 'Ativo' : 'Inativo'">Status</span>
+                            </td>
+                            <td>
+                                <div class="actions-group">
+                                    <a th:href="@{/alterarUsuario(id=${usuario.id})}" 
+                                       class="action-btn action-edit" 
+                                       title="Editar usuário">
+                                        ✏️ Editar
+                                    </a>
+
+                                    <form th:action="@{/usuario/alterar-status}" method="post" style="display: inline;">
+                                        <input type="hidden" name="id" th:value="${usuario.id}" />
+                                        <button type="submit"
+                                                class="action-btn action-toggle"
+                                                th:classappend="${usuario.status} ? 'desativar' : ''"
+                                                th:title="${usuario.status} ? 'Desativar usuário' : 'Ativar usuário'"
+                                                onclick="return confirm('Tem certeza que deseja alterar o status deste usuário?')">
+                                            <span th:if="${usuario.status}">🚫 Desativar</span>
+                                            <span th:if="${!usuario.status}">✅ Ativar</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${usuarios == null or usuarios.isEmpty()}" class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <h3>Nenhum usuário encontrado</h3>
+                    <p th:if="${filtroNome != null and !filtroNome.isEmpty()}">
+                        Não encontramos usuários com o termo "<strong th:text="${filtroNome}"></strong>".
+                        <br><a th:href="@{/listaUsuarios}" class="btn btn-secondary mt-3">Ver todos os usuários</a>
+                    </p>
+                    <p th:if="${filtroNome == null or filtroNome.isEmpty()}">
+                        Comece cadastrando o primeiro usuário!
+                        <br><a th:href="@{/cadastroUsuario}" class="btn btn-primary mt-3">➕ Cadastrar Usuário</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a th:href="@{/cadastroUsuario}" class="btn-fab" title="Novo Usuário">
+        ➕
+    </a>
 </body>
 </html>

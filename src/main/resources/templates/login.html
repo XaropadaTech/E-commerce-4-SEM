@@ -3,74 +3,193 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>Login - E-commerce</title>
+  <link rel="stylesheet" th:href="@{/css/base.css}">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
+      padding: 20px;
     }
 
     .login-container {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      width: 300px;
-    }
-
-    .login-container h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .login-container input[type="email"],
-    .login-container input[type="password"] {
+      background: white;
+      border-radius: var(--border-radius-xl);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      max-width: 400px;
     }
 
-    .login-container input[type="submit"] {
-      width: 100%;
-      padding: 10px;
-      background-color: #4CAF50;
-      border: none;
-      border-radius: 5px;
+    .login-header {
+      background: var(--primary-gradient);
       color: white;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .login-container input[type="submit"]:hover {
-      background-color: #45a049;
-    }
-
-    .erro {
-      color: red;
+      padding: 40px 30px;
       text-align: center;
+    }
+
+    .login-header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .login-header p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    .login-form {
+      padding: 40px 30px;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      font-size: 1rem;
+      transition: var(--transition);
+      background: white;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 18px 30px;
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-md);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px 20px;
+      border-radius: var(--border-radius-md);
+      margin-top: 20px;
+      border-left: 4px solid var(--danger-color);
+      font-weight: 500;
+    }
+
+    .welcome-message {
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+      background: var(--background-light);
+      border-radius: var(--border-radius-md);
+      color: var(--text-light);
+    }
+
+    .input-icon {
+      position: relative;
+    }
+
+    .input-icon::before {
+      content: attr(data-icon);
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      z-index: 1;
+    }
+
+    .input-icon .form-control {
+      padding-left: 45px;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        margin: 10px;
+      }
+      
+      .login-header {
+        padding: 30px 20px;
+      }
+      
+      .login-form {
+        padding: 30px 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <h2>Login</h2>
-    <form action="/autenticar" method="post">
-      <input type="email" name="email" placeholder="Email" required />
-      <input type="password" name="senha" placeholder="Senha" required />
-      <input type="submit" value="Entrar" />
-    </form>
+    <div class="login-header">
+      <h1>🛒 E-commerce</h1>
+      <p>Faça login para acessar o sistema</p>
+    </div>
 
-    <!-- Exibe erro se existir -->
-    <p th:if="${erro}" th:text="${erro}" class="erro"></p>
+    <div class="login-form">
+      <form action="/autenticar" method="post">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <div class="input-icon" data-icon="📧">
+            <input type="email" id="email" name="email" class="form-control" 
+                   placeholder="Digite seu email" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <div class="input-icon" data-icon="🔒">
+            <input type="password" id="senha" name="senha" class="form-control" 
+                   placeholder="Digite sua senha" required />
+          </div>
+        </div>
+
+        <button type="submit" class="login-btn">
+          🚀 Entrar no Sistema
+        </button>
+      </form>
+
+      <!-- Exibe erro se existir -->
+      <div th:if="${erro}" class="error-message">
+        ⚠️ <span th:text="${erro}">Erro de autenticação</span>
+      </div>
+
+      <div class="welcome-message">
+        <p><strong>Bem-vindo ao sistema!</strong></p>
+        <p>Use suas credenciais para acessar o painel administrativo.</p>
+      </div>
+    </div>
   </div>
 </body>
 </html>

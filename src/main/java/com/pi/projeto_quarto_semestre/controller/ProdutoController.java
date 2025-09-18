@@ -271,6 +271,42 @@ public String salvarProduto(
         return "visualizarProduto";
     }
 
+    @GetMapping("/produtos/excluirImagem")
+    public String excluirImagem(@RequestParam Long imagemId, HttpSession session) {
+        String grupo = (String) session.getAttribute("grupoUsuario");
+        if (grupo == null) {
+            return "redirect:/login";
+        }
+
+        // Apenas administradores podem excluir imagens
+        if (!"administrador".equalsIgnoreCase(grupo)) {
+            return "redirect:/listaProdutos";
+        }
+
+        ProdutoImagem imagem = produtoImagemRepository.findById(imagemId)
+                .orElseThrow(() -> new RuntimeException("Imagem não encontrada"));
+
+        Long produtoId = imagem.getProduto().getId();
+
+        // Excluir arquivo físico
+        try {
+            String caminhoCompleto = System.getProperty("user.dir") + "/imagens_upload" + 
+                                   imagem.getCaminhoImagem().replace("/imagens", "");
+            File arquivo = new File(caminhoCompleto);
+            if (arquivo.exists()) {
+                arquivo.delete();
+            }
+        } catch (Exception e) {
+            // Log do erro, mas continua a exclusão do banco
+            System.err.println("Erro ao excluir arquivo físico: " + e.getMessage());
+        }
+
+        // Excluir do banco
+        produtoImagemRepository.delete(imagem);
+
+        return "redirect:/produtos/form?id=" + produtoId;
+    }
+
     @PostMapping("/produtos/{id}/alternar-status")
     public String alternarStatusProdutoPost(@PathVariable Long id) {
     Produto produto = produtoRepository.findById(id)
