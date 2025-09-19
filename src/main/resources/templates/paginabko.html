@@ -1,32 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Página BK0</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Backoffice</title>
+  <link rel="stylesheet" th:href="@{/css/base.css}">
 </head>
 <body>
-<h1>Bem-vindo, <span th:text="${grupo}">Usuário</span>!</h1>
 
-    <div th:if="${grupo == 'administrador'}">
-        <p>Conteúdo exclusivo para Administrador</p>
-        <!-- Pode colocar botões, menus, relatórios, etc -->
-        <ul>
-            <li><a th:href="@{/listaProdutos}">Lista de Produtos</a></li>
-            <li><a th:href="@{/listaUsuarios}">Lista de Usuários</a></li>
-        </ul>
+  <!-- Cabeçalho -->
+  <div class="page-header">
+    <h1>Bem-vindo, <span th:text="${grupo}">Usuário</span>!</h1>
+    <p class="mt-2">
+      <span th:text="${grupo == 'administrador'} ?
+        'Gerencie produtos, usuários e configurações administrativas.' :
+        'Gerencie o estoque e acompanhe os itens disponíveis.'">
+        Área do sistema
+      </span>
+    </p>
+  </div>
+
+  <div class="main-container">
+    <div class="content-wrapper">
+
+      <!-- Bloco por perfil -->
+      <div th:switch="${grupo}">
+
+        <!-- ADMIN -->
+        <div th:case="'administrador'" class="card">
+          <div class="card-header">
+            <h2 class="card-title">Visão do Administrador</h2>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">Funções administrativas disponíveis:</p>
+            <div class="d-flex" style="gap:16px; flex-wrap:wrap;">
+              <a th:href="@{/listaProdutos}" class="btn btn-primary">Lista Produtos</a>
+              <a th:href="@{/listaUsuarios}" class="btn btn-secondary">Lista Usuários</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ESTOQUISTA -->
+        <div th:case="'estoquista'" class="card">
+          <div class="card-header">
+            <h2 class="card-title">Visão do Estoquista</h2>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">Ações mais comuns para o seu perfil:</p>
+            <div class="d-flex" style="gap:16px; flex-wrap:wrap;">
+              <a th:href="@{/listaProdutos}" class="btn btn-primary">Lista Produtos</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- fallback -->
+        <div th:case="*"
+             class="alert alert-info">
+          Seu perfil não foi identificado. Faça login novamente.
+        </div>
+      </div>
+
+      <!-- Botão de sair -->
+      <div class="form-actions" style="margin: 10px;">
+        <form th:action="@{/logout}" method="get">
+            <button type="submit" class="btn btn-logout btn-lg">🚪 Sair</button>
+        </form>
+      </div>
+
     </div>
-
-    <div th:if="${grupo == 'estoquista'}">
-        <p>Conteúdo exclusivo para Estoquista</p>
-        <!-- Outra parte da página para o estoquista -->
-        <ul>
-            <li><a th:href="@{/listaProdutos}">Lista de Produtos</a></li>
-        </ul>
-    </div>
-
-    <form th:action="@{/logout}" method="get">
-        <button type="submit">Sair</button>
-    </form>
-
+  </div>
 
 </body>
 </html>

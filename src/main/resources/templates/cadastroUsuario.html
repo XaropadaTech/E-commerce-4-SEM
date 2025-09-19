@@ -1,156 +1,134 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cadastrar Usuário</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novo Usuário</title>
+  <link rel="stylesheet" th:href="@{/css/base.css}">
 </head>
 <body>
-  <h1 style="text-align:center;">Cadastrar Usuário</h1>
 
-  <form th:action="@{/usuario}" th:object="${usuario}" method="post" novalidate>
-    <div th:if="${mensagem}" style="color:green;" th:text="${mensagem}"></div>
-    <div th:if="${erro}"     style="color:red;"   th:text="${erro}"></div>
+  <a th:href="@{/listaUsuarios}" class="back-button">← Voltar para Lista</a>
 
+  <div class="main-container">
+    <div class="content-wrapper">
+      <div class="page-header">
+        <h1>Novo Usuário</h1>
+        <p>Cadastre um novo usuário no sistema</p>
+      </div>
 
-    <div>
-      <label for="nome">Nome *</label>
-      <input id="nome" type="text" th:field="*{nome}" maxlength="100" placeholder="Digite seu nome" required />
-      <div class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
+      <div class="form-container">
+        <div class="alert alert-success" th:if="${mensagem}" th:text="${mensagem}"></div>
+        <div class="alert alert-danger"  th:if="${erro}"     th:text="${erro}"></div>
+
+        <form th:action="@{/usuario}" th:object="${usuario}" method="post" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">Nome *</label>
+              <input id="nome" type="text" th:field="*{nome}" maxlength="100" placeholder="Digite o nome" class="form-control" required />
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
+            </div>
+
+            <div class="form-group">
+              <label for="cpf">CPF *</label>
+              <input id="cpf" type="text" th:field="*{cpf}" maxlength="11" placeholder="Somente números" class="form-control" required />
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">E-mail (login) *</label>
+              <input id="email" type="email" th:field="*{email}" maxlength="100" placeholder="ex: joao@empresa.com" class="form-control" required />
+              <small id="emailMsg" class="text-danger" style="display:none;">E-mail já cadastrado.</small>
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
+            </div>
+
+            <div class="form-group">
+              <label for="grupo">Grupo *</label>
+              <select id="grupo" th:field="*{grupo}" class="form-control" required>
+                <option value="" disabled selected>Selecione...</option>
+                <option value="administrador">administrador</option>
+                <option value="estoquista">estoquista</option>
+              </select>
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="senha">Senha *</label>
+              <input id="senha" type="password" th:field="*{senha}" maxlength="255" class="form-control" required />
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}">Erro</div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmarSenha">Confirmar Senha *</label>
+              <input id="confirmarSenha" type="password" name="confirmarSenha" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <a th:href="@{/listaUsuarios}" class="btn btn-secondary btn-lg">❌ Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">➕ Cadastrar Usuário</button>
+          </div>
+        </form>
+      </div>
     </div>
-
-    <div>
-      <label for="cpf">CPF *</label>
-      <input id="cpf" type="text" th:field="*{cpf}" maxlength="11" placeholder="Somente números" required />
-      <div class="erro" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
-    </div>
-
-    <div>
-      <label for="email">E-mail *</label>
-      <input id="email" type="email" th:field="*{email}" maxlength="100" placeholder="Digite seu e-mail" />
-      <small id="emailMsg" style="color:red;display:none;">E-mail já cadastrado.</small>
-      <div class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
-    </div>
-
-    <!-- <div class="inline">
-      <label for="status">Ativo *</label>
-      <input id="status" type="checkbox" th:field="*{status}" />
-      <div class="erro" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Erro</div>
-    </div> -->
-
-    <div>
-      <label for="grupo">Grupo *</label>
-      <select id="grupo" th:field="*{grupo}" required>
-        <option value="" disabled selected>Selecione...</option>
-        <option value="administrador">administrador</option>
-        <option value="estoquista">estoquista</option>
-      </select>
-      <div class="erro" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
-    </div>
-
-    <div>
-      <label for="senha">Senha *</label>
-      <input id="senha" type="password" th:field="*{senha}" maxlength="255" required />
-      <div class="erro" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}">Erro</div>
-    </div>
-
-    <div>
-      <label for="confirmarSenha">Confirmar Senha *</label>
-      <input id="confirmarSenha" type="password" name="confirmarSenha" required />
-    </div>
-
-    <div class="actions">
-      <a class="btn" th:href="@{/listaUsuarios}">Cancelar</a>
-      <button class="btn-primary" type="submit">Salvar</button>
-    </div>
-  </form>
+  </div>
 
   <script th:inline="javascript">
-    // Validação simples de confirmação de senha no cliente
+    // confirmação de senha
     (function() {
-      var form = document.querySelector('form');
+      const form = document.querySelector('form');
       form.addEventListener('submit', function(e) {
-        var s1 = document.getElementById('senha').value;
-        var s2 = document.getElementById('confirmarSenha').value;
+        const s1 = document.getElementById('senha').value;
+        const s2 = document.getElementById('confirmarSenha').value;
         if (s1 !== s2) {
           e.preventDefault();
           alert('As senhas não coincidem.');
         }
-      }
-      
-      
-      );
+      });
     })();
 
-
-    // Validação simples de e-mail do usuário
+    // verificação simples de e-mail duplicado
     (function() {
-    const email = document.getElementById('email');
-    const msg   = document.getElementById('emailMsg');
-    const form  = document.querySelector('form');
+      const email = document.getElementById('email');
+      const msg   = document.getElementById('emailMsg');
 
-    async function checkEmail(value) {
-      if (!value) { msg.style.display = 'none'; return false; }
-      try {
-        const r = await fetch('/usuario/email-exists' + '?email=' + encodeURIComponent(value));
-        const exists = await r.json();
-        msg.style.display = exists ? 'inline' : 'none';
-        return exists;
-      } catch(e) {
-        // silencioso
-        return false;
+      async function checkEmail(value) {
+        if (!value) { msg.style.display = 'none'; return false; }
+        try {
+          const r = await fetch('/usuario/email-exists?email=' + encodeURIComponent(value));
+          const exists = await r.json();
+          msg.style.display = exists ? 'inline' : 'none';
+          return exists;
+        } catch(e) { return false; }
       }
-    }
+      email.addEventListener('blur', () => checkEmail(email.value));
+    })();
 
-    email.addEventListener('blur',  () => checkEmail(email.value));
-    // email.addEventListener('input', () => checkEmail(email.value));
-
-    form.addEventListener('submit', async function(e) {
-      const exists = await checkEmail(email.value);
-      if (exists) {
-        e.preventDefault();
-        alert('Já existe um usuário com esse e-mail.');
-      }
-    });
-  })();
-
-      (function() {
-    const cpfInput = document.getElementById('cpf');
-
-    // Função que calcula a validade do CPF
-    function validaCPF(cpf) {
-        const cpfLimpo = cpf.replace(/[^\d]+/g, '');
-        if (cpfLimpo.length !== 11 || /^(\d)\1{10}$/.test(cpfLimpo)) return false;
-        let soma = 0, resto;
-        for (let i = 1; i <= 9; i++) {
-          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
-        }
-        resto = (soma * 10) % 11;
-        if ((resto === 10) || (resto === 11)) resto = 0;
-        if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
-        soma = 0;
-        for (let i = 1; i <= 10; i++) {
-          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
-        }
-        resto = (soma * 10) % 11;
-        if ((resto === 10) || (resto === 11)) resto = 0;
-        if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+    // validação de CPF
+    (function() {
+      const cpfInput = document.getElementById('cpf');
+      function validaCPF(cpf) {
+        const c = cpf.replace(/[^\d]+/g, '');
+        if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+        let s=0, r;
+        for (let i=1;i<=9;i++) s += parseInt(c.substring(i-1,i))*(11-i);
+        r = (s*10)%11; if (r===10||r===11) r=0; if (r!==parseInt(c.substring(9,10))) return false;
+        s=0; for (let i=1;i<=10;i++) s += parseInt(c.substring(i-1,i))*(12-i);
+        r = (s*10)%11; if (r===10||r===11) r=0; if (r!==parseInt(c.substring(10,11))) return false;
         return true;
-    }
-
-    // Valida o CPF quando o usuário SAI do campo do CPF
-    cpfInput.addEventListener('blur', function() {
-        const cpfValor = cpfInput.value;
-
-        // Se o campo não estiver vazio e o CPF for inválido...
-        if (cpfValor && !validaCPF(cpfValor)) {
-            alert('CPF inválido! Por favor, corrija.');
-            // Limpa o campo para forçar a correção
-            cpfInput.value = '';
+      }
+      cpfInput.addEventListener('blur', function() {
+        const v = cpfInput.value;
+        if (v && !validaCPF(v)) {
+          alert('CPF inválido! Por favor, corrija.');
+          cpfInput.value = '';
         }
-    });
-})();
-
+      });
+    })();
   </script>
 </body>
 </html>

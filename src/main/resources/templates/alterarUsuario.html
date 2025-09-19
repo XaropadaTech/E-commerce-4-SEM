@@ -1,94 +1,136 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alterar Usuário</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editar Usuário</title>
+  <link rel="stylesheet" th:href="@{/css/base.css}">
 </head>
 <body>
-    <h1>Alterar Usuário</h1>
-    <form th:action="@{/usuario/salvar-alteracao}" th:object="${usuario}" method="post">
-    <input type="hidden" th:field="*{id}" />
 
-    <label for="nome">Nome:</label>
-    <input type="text" th:field="*{nome}" id="nome" required /><br/><br/>
+  <a th:href="@{/listaUsuarios}" class="back-button">← Voltar para Lista</a>
 
-    <label for="cpf">CPF:</label>
-    <input type="text" th:field="*{cpf}" id="cpf" required /><br/><br/>
+  <div class="main-container">
+    <div class="content-wrapper">
+      <div class="page-header">
+        <h1>Editar Usuário</h1>
+        <p>Atualize os dados do usuário</p>
+      </div>
 
-    <!-- Campo de grupo (somente se não estiver alterando a si mesmo) -->
-<div th:if="${emailLogado != usuario.email}">
-    <label for="grupo">Grupo:</label>
-    <select id="grupo" th:field="*{grupo}">
-        <option th:value="administrador" th:text="'Administrador'"></option>
-        <option th:value="estoquista" th:text="'Estoquista'"></option>
-    </select><br/><br/>
-</div>
+      <div class="form-container">
+        <div class="alert alert-success" th:if="${mensagem}" th:text="${mensagem}"></div>
+        <div class="alert alert-danger"  th:if="${erro}"     th:text="${erro}"></div>
 
-    <label for="senha">Senha:</label>
-        <input type="password" th:field="*{senha}" id="senha" /><br/><br/>
+        <form th:action="@{/usuarios/atualizar}" th:object="${usuario}" method="post" novalidate>
+          <input type="hidden" th:field="*{id}" />
 
-        <label for="confirmarSenha">Confirmar Senha:</label>
-        <input type="password" id="confirmarSenha" name="confirmarSenha" /><br/><br/>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">Nome *</label>
+              <input id="nome" type="text" th:field="*{nome}" maxlength="100" placeholder="Digite o nome" class="form-control" required />
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
+            </div>
 
-    <button type="submit">Salvar Alterações</button>
-</form>
+            <div class="form-group">
+              <label for="cpf">CPF *</label>
+              <input id="cpf" type="text" th:field="*{cpf}" maxlength="11" placeholder="Somente números" class="form-control" required />
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
+            </div>
+          </div>
 
-    <a th:href="@{/listaUsuarios}">Voltar para Lista</a>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">E-mail (login) *</label>
+              <input id="email" type="email" th:field="*{email}" maxlength="100" placeholder="ex: joao@empresa.com" class="form-control" required />
+              <small id="emailMsg" class="text-danger" style="display:none;">E-mail já cadastrado.</small>
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
+            </div>
 
-    <script th:inline="javascript">
-/*<![CDATA[*/
-    /* Verifica se existe o atributo antes de tentar usá-lo */
-    /* Thymeleaf cria uma variável JS nula se não existir no contexto */
-    let sucesso = /*[[${sucesso}]]*/ null;
-    let erro = /*[[${erro}]]*/ null;
+            <div class="form-group">
+              <label for="grupo">Grupo *</label>
+              <select id="grupo" th:field="*{grupo}" class="form-control" required>
+                <option value="administrador">administrador</option>
+                <option value="estoquista">estoquista</option>
+              </select>
+              <div class="text-danger mt-1" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
+            </div>
+          </div>
 
-    if (sucesso !== null) {
-        alert(sucesso);
-    }
+          <!-- Troca de senha (opcional) -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="novaSenha">Nova Senha (opcional)</label>
+              <input id="novaSenha" type="password" name="novaSenha" maxlength="255" class="form-control" placeholder="Deixe em branco para manter a atual" />
+            </div>
 
-    if (erro !== null) {
-        alert(erro);
-    }
-/*]]>*/
+            <div class="form-group">
+              <label for="confirmarSenha">Confirmar Nova Senha</label>
+              <input id="confirmarSenha" type="password" name="confirmarSenha" class="form-control" placeholder="Repita a nova senha" />
+            </div>
+          </div>
 
-        (function() {
-    const cpfInput = document.getElementById('cpf');
+          <div class="form-actions">
+            <a th:href="@{/listaUsuarios}" class="btn btn-secondary btn-lg">❌ Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">💾 Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    // Função que calcula a validade do CPF
-    function validaCPF(cpf) {
-        const cpfLimpo = cpf.replace(/[^\d]+/g, '');
-        if (cpfLimpo.length !== 11 || /^(\d)\1{10}$/.test(cpfLimpo)) return false;
-        let soma = 0, resto;
-        for (let i = 1; i <= 9; i++) {
-          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+  <script th:inline="javascript">
+    // valida nova senha (apenas se algum dos campos foi preenchido)
+    (function() {
+      const form = document.querySelector('form');
+      const s1 = document.getElementById('novaSenha');
+      const s2 = document.getElementById('confirmarSenha');
+      form.addEventListener('submit', function(e) {
+        if ((s1.value || s2.value) && s1.value !== s2.value) {
+          e.preventDefault();
+          alert('As senhas não coincidem.');
         }
-        resto = (soma * 10) % 11;
-        if ((resto === 10) || (resto === 11)) resto = 0;
-        if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
-        soma = 0;
-        for (let i = 1; i <= 10; i++) {
-          soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
-        }
-        resto = (soma * 10) % 11;
-        if ((resto === 10) || (resto === 11)) resto = 0;
-        if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+      });
+    })();
+
+    // verificação simples de e-mail duplicado (só quando alterar)
+    (function() {
+      const email    = document.getElementById('email');
+      const msg      = document.getElementById('emailMsg');
+      const original = /*[[${usuario.email}]]*/ '';
+
+      async function checkEmail(value) {
+        if (!value || value === original) { msg.style.display = 'none'; return false; }
+        try {
+          const r = await fetch('/usuario/email-exists?email=' + encodeURIComponent(value));
+          const exists = await r.json();
+          msg.style.display = exists ? 'inline' : 'none';
+          return exists;
+        } catch(e) { return false; }
+      }
+      email.addEventListener('blur', () => checkEmail(email.value));
+    })();
+
+    // validação de CPF
+    (function() {
+      const cpfInput = document.getElementById('cpf');
+      function validaCPF(cpf) {
+        const c = cpf.replace(/[^\d]+/g, '');
+        if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+        let s=0, r;
+        for (let i=1;i<=9;i++) s += parseInt(c.substring(i-1,i))*(11 - i);
+        r = (s*10)%11; if (r===10||r===11) r=0; if (r!==parseInt(c.substring(9,10))) return false;
+        s=0; for (let i=1;i<=10;i++) s += parseInt(c.substring(i-1,i))*(12 - i);
+        r = (s*10)%11; if (r===10||r===11) r=0; if (r!==parseInt(c.substring(10,11))) return false;
         return true;
-    }
-
-    // Valida o CPF quando o usuário SAI do campo do CPF
-    cpfInput.addEventListener('blur', function() {
-        const cpfValor = cpfInput.value;
-
-        // Se o campo não estiver vazio e o CPF for inválido...
-        if (cpfValor && !validaCPF(cpfValor)) {
-            alert('CPF inválido! Por favor, corrija.');
-            // Limpa o campo para forçar a correção
-            cpfInput.value = '';
+      }
+      cpfInput.addEventListener('blur', function() {
+        const v = cpfInput.value;
+        if (v && !validaCPF(v)) {
+          alert('CPF inválido! Por favor, corrija.');
+          cpfInput.value = '';
         }
-    });
-})();
-
-</script>
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -279,6 +279,16 @@ select.form-control {
     box-shadow: var(--shadow-lg);
 }
 
+/* Botão Logout */
+.btn-logout {
+  background: #dc3545; /* vermelho sólido */
+  color: white;
+}
+.btn-logout:hover {
+  background: #b02a37;
+}
+
+
 /* Tabelas */
 .table-container {
     padding: 40px;
