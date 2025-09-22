@@ -27,6 +27,10 @@ public class ProdutoImagem {
     @Column(name = "criado_em")
     private LocalDateTime criadoEm = LocalDateTime.now();
 
+    @Column(name="caminho_relativo", length=500)
+    private String caminhoRelativo; // ex.: products/42/42_abc123.jpg
+
+
     // Getters e Setters
 
     public Long getId() {

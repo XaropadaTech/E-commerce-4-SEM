@@ -3,6 +3,7 @@ package com.pi.projeto_quarto_semestre.controller;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -139,27 +140,69 @@ public String salvarProduto(
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
 
+        // validação de quantidade (não negativa)
         if (qtdEstoque == null || qtdEstoque < 0) {
-            // Regra simples de validação
             return "redirect:/produtos/form?id=" + id;
         }
 
         produto.setQtdEstoque(qtdEstoque);
-        produtoRepository.save(produto); // reflete no banco (H15)
+        produtoRepository.save(produto); // reflete no banco
         return "redirect:/listaProdutos";
     }
 
     // --- FLUXO NORMAL (ADMIN/OUTROS GRUPOS) ---
-    // Aqui os campos que ficaram "required=false" no RequestParam
-    // são verificados manualmente para evitar 400 quando o form tiver campos desabilitados em cenários específicos.
-    if (nome == null || nome.isBlank()) {
+
+    // Normalizações de entrada
+    nome = (nome == null) ? null : nome.trim();
+    descricao = (descricao == null) ? "" : descricao;
+
+    // Validações server-side (sem anotações), compatíveis com limites do BD
+    // nome: obrigatório e <= 200
+    if (nome == null || nome.isEmpty()) {
         throw new RuntimeException("Nome é obrigatório.");
     }
-    if (descricao == null) {
-        descricao = ""; // se quiser permitir vazio
+    if (nome.length() > 200) {
+        throw new RuntimeException("Nome deve ter no máximo 200 caracteres.");
     }
-    if (preco == null || preco <= 0) {
-        throw new RuntimeException("Preço inválido! O preço deve ser maior que zero.");
+
+    // avaliação: obrigatória, 1.0..5.0 e passo 0.5
+    if (avaliacao == null) {
+        throw new RuntimeException("Avaliação é obrigatória.");
+    } else {
+        BigDecimal a = BigDecimal.valueOf(avaliacao).setScale(1, RoundingMode.HALF_UP);
+        boolean faixa = a.compareTo(new BigDecimal("1.0")) >= 0
+                && a.compareTo(new BigDecimal("5.0")) <= 0;
+        boolean passo = a.remainder(new BigDecimal("0.5")).compareTo(BigDecimal.ZERO) == 0;
+        if (!faixa || !passo) {
+            throw new RuntimeException("Avaliação deve estar entre 1,0 e 5,0 em passos de 0,5.");
+        }
+    }
+
+    // descricao: <= 2000
+    if (descricao.length() > 2000) {
+        throw new RuntimeException("Descrição deve ter no máximo 2000 caracteres.");
+    }
+
+    // preco: obrigatório, >= 0, no máximo 2 casas
+    if (preco == null) {
+        throw new RuntimeException("Preço é obrigatório.");
+    }
+    BigDecimal precoBD = BigDecimal.valueOf(preco);
+    if (precoBD.compareTo(BigDecimal.ZERO) < 0) {
+        throw new RuntimeException("Preço não pode ser negativo.");
+    }
+    try {
+        // Verifica estritamente “no máximo 2 casas”
+        precoBD.setScale(2, RoundingMode.UNNECESSARY);
+    } catch (ArithmeticException ex) {
+        throw new RuntimeException("Preço deve ter no máximo 2 casas decimais.");
+    }
+    // Padroniza escala para gravar
+    precoBD = precoBD.setScale(2, RoundingMode.HALF_UP);
+
+    // qtdEstoque: obrigatória e >= 0
+    if (qtdEstoque == null || qtdEstoque < 0) {
+        throw new RuntimeException("Quantidade em estoque deve ser um inteiro maior ou igual a zero.");
     }
 
     Produto produtoSalvo;
@@ -170,32 +213,37 @@ public String salvarProduto(
         produtoSalvo = new Produto();
     }
 
+    // atribuições já normalizadas
     produtoSalvo.setNome(nome);
-
-    if (avaliacao != null && avaliacao >= 1.0 && avaliacao <= 5.0) {
-        produtoSalvo.setAvaliacao(BigDecimal.valueOf(avaliacao));
-    } else {
-        // default
-        produtoSalvo.setAvaliacao(BigDecimal.valueOf(3.0));
-    }
-
     produtoSalvo.setDescricao(descricao);
-    produtoSalvo.setPreco(BigDecimal.valueOf(preco));
+    produtoSalvo.setPreco(precoBD);
     produtoSalvo.setQtdEstoque(qtdEstoque);
     produtoSalvo.setStatus(status != null ? status : true);
 
-    produtoSalvo = produtoRepository.save(produtoSalvo);
+    // avaliacao normalizada e validada (1 casa)
+    BigDecimal avaliacaoBD = BigDecimal.valueOf(avaliacao).setScale(1, RoundingMode.HALF_UP);
+    produtoSalvo.setAvaliacao(avaliacaoBD);
+
+    try {
+        // tratamento de violação do BD (limites/escala/precisão)
+        produtoSalvo = produtoRepository.save(produtoSalvo);
+    } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+        throw new RuntimeException(
+            "Um ou mais campos excedem os limites do banco (nome ≤ 200, descrição ≤ 2000, preço com 2 casas). Ajuste e tente novamente.",
+            ex
+        );
+    }
 
     // Salvar novas imagens (somente para não-estoquista)
     List<ProdutoImagem> imagensSalvas = new ArrayList<>();
     if (imagens != null && imagens.length > 0) {
         for (MultipartFile arquivo : imagens) {
             if (!arquivo.isEmpty()) {
-                String novoNome = salvarArquivoNoDiretorio(arquivo);
+                String novoNome = salvarArquivoNoDiretorio(arquivo); // sua rotina já existente
 
                 ProdutoImagem imagem = new ProdutoImagem();
                 imagem.setProduto(produtoSalvo);
-                imagem.setCaminhoImagem("/imagens/" + novoNome);
+                imagem.setCaminhoImagem("/imagens/" + novoNome); // URL pública salva no banco
                 imagem.setNomeOriginal(arquivo.getOriginalFilename());
                 imagem.setImagemPadrao(false);
 
@@ -222,6 +270,14 @@ public String salvarProduto(
                 img.setImagemPadrao(isPrincipal);
             }
             produtoImagemRepository.save(img);
+        }
+    } else {
+        // garante 1 principal se não houver
+        List<ProdutoImagem> todasImagens = produtoImagemRepository.findByProdutoId(produtoSalvo.getId());
+        if (!todasImagens.isEmpty() && todasImagens.stream().noneMatch(ProdutoImagem::getImagemPadrao)) {
+            ProdutoImagem primeira = todasImagens.get(0);
+            primeira.setImagemPadrao(true);
+            produtoImagemRepository.save(primeira);
         }
     }
 
