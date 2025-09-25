@@ -307,25 +307,42 @@ public String salvarProduto(
     return novoNome;
     }
 
-    @GetMapping("/produtos/visualizar")
-    public String visualizarProduto(@RequestParam Long id, Model model, HttpSession session) {
-        String grupo = (String) session.getAttribute("grupoUsuario");
-        if (grupo == null) {
-            return "redirect:/login";
-        }
-
-        Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
-
-        // Carregar imagens do produto
-        List<ProdutoImagem> imagens = produtoImagemRepository.findByProdutoId(produto.getId());
-        produto.setImagens(imagens);
-
-        model.addAttribute("produto", produto);
-        model.addAttribute("grupo", grupo);
-
-        return "visualizarProduto";
+ @GetMapping("/produtos/visualizar")
+public String visualizarProduto(@RequestParam Long id, Model model, HttpSession session) {
+    String grupo = (String) session.getAttribute("grupoUsuario");
+    if (grupo == null) {
+        return "redirect:/login";
     }
+
+    Produto produto = produtoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+    // Carrega imagens
+    List<ProdutoImagem> imagens = produtoImagemRepository.findByProdutoId(produto.getId());
+
+    // Se nenhuma estiver marcada como principal, garante a primeira como principal
+    boolean temPrincipal = imagens.stream().anyMatch(ProdutoImagem::getImagemPadrao);
+    if (!temPrincipal && !imagens.isEmpty()) {
+        imagens.get(0).setImagemPadrao(true);
+    }
+
+    // Ordena: principal primeiro, depois mantém a ordem por id (ou outro critério)
+    imagens.sort((a, b) -> {
+        int byPrincipal = Boolean.compare(b.getImagemPadrao(), a.getImagemPadrao()); // true antes de false
+        if (byPrincipal != 0) return byPrincipal;
+        // desempate: id crescente (opcional)
+        Long ida = a.getId() != null ? a.getId() : Long.MAX_VALUE;
+        Long idb = b.getId() != null ? b.getId() : Long.MAX_VALUE;
+        return ida.compareTo(idb);
+    });
+
+    produto.setImagens(imagens);
+
+    model.addAttribute("produto", produto);
+    model.addAttribute("grupo", grupo);
+    return "visualizarProduto";
+}
+
 
     @GetMapping("/produtos/excluirImagem")
     public String excluirImagem(@RequestParam Long imagemId, HttpSession session) {
