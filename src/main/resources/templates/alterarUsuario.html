@@ -2,7 +2,7 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Editar Usuário</title>
   <link rel="stylesheet" th:href="@{/css/base.css}">
 </head>
@@ -18,54 +18,62 @@
       </div>
 
       <div class="form-container">
+        <!-- mensagens flash -->
         <div class="alert alert-success" th:if="${mensagem}" th:text="${mensagem}"></div>
+        <div class="alert alert-success" th:if="${sucesso}"  th:text="${sucesso}"></div>
         <div class="alert alert-danger"  th:if="${erro}"     th:text="${erro}"></div>
 
-        <form th:action="@{/usuarios/atualizar}" th:object="${usuario}" method="post" novalidate>
+        <form th:action="@{/usuario/salvar-alteracao}" th:object="${usuario}" method="post" novalidate>
           <input type="hidden" th:field="*{id}" />
 
           <div class="form-row">
             <div class="form-group">
               <label for="nome">Nome *</label>
-              <input id="nome" type="text" th:field="*{nome}" maxlength="100" placeholder="Digite o nome" class="form-control" required />
-              <div class="text-danger mt-1" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
+              <input id="nome" type="text" th:field="*{nome}" maxlength="100"
+                     placeholder="Digite o nome" class="form-control" required />
+              <div class="field-error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</div>
             </div>
 
             <div class="form-group">
               <label for="cpf">CPF *</label>
-              <input id="cpf" type="text" th:field="*{cpf}" maxlength="11" placeholder="Somente números" class="form-control" required />
-              <div class="text-danger mt-1" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
+              <input id="cpf" type="text" th:field="*{cpf}" maxlength="14"
+                     placeholder="Somente números" class="form-control" required />
+              <div class="field-error" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}">Erro</div>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="email">E-mail (login) *</label>
-              <input id="email" type="email" th:field="*{email}" maxlength="100" placeholder="ex: joao@empresa.com" class="form-control" required />
+              <input id="email" type="email" th:field="*{email}" maxlength="100"
+                     placeholder="ex: joao@empresa.com" class="form-control" required />
               <small id="emailMsg" class="text-danger" style="display:none;">E-mail já cadastrado.</small>
-              <div class="text-danger mt-1" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
+              <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</div>
             </div>
 
-            <div class="form-group">
+            <!-- Grupo: ocultar quando editando o próprio usuário -->
+            <div class="form-group" th:if="${emailLogado != usuario.email}">
               <label for="grupo">Grupo *</label>
               <select id="grupo" th:field="*{grupo}" class="form-control" required>
                 <option value="administrador">administrador</option>
                 <option value="estoquista">estoquista</option>
               </select>
-              <div class="text-danger mt-1" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
+              <div class="field-error" th:if="${#fields.hasErrors('grupo')}" th:errors="*{grupo}">Erro</div>
             </div>
           </div>
 
           <!-- Troca de senha (opcional) -->
           <div class="form-row">
             <div class="form-group">
-              <label for="novaSenha">Nova Senha (opcional)</label>
-              <input id="novaSenha" type="password" name="novaSenha" maxlength="255" class="form-control" placeholder="Deixe em branco para manter a atual" />
+              <label for="senha">Nova Senha (opcional)</label>
+              <input id="senha" type="password" th:field="*{senha}" maxlength="255"
+                     class="form-control" placeholder="Deixe em branco para manter a atual" />
             </div>
 
             <div class="form-group">
               <label for="confirmarSenha">Confirmar Nova Senha</label>
-              <input id="confirmarSenha" type="password" name="confirmarSenha" class="form-control" placeholder="Repita a nova senha" />
+              <input id="confirmarSenha" type="password" name="confirmarSenha"
+                     class="form-control" placeholder="Repita a nova senha" />
             </div>
           </div>
 
@@ -79,10 +87,10 @@
   </div>
 
   <script th:inline="javascript">
-    // valida nova senha (apenas se algum dos campos foi preenchido)
+    // bloqueia submit se senha e confirmarSenha divergirem
     (function() {
       const form = document.querySelector('form');
-      const s1 = document.getElementById('novaSenha');
+      const s1 = document.getElementById('senha');
       const s2 = document.getElementById('confirmarSenha');
       form.addEventListener('submit', function(e) {
         if ((s1.value || s2.value) && s1.value !== s2.value) {
@@ -92,12 +100,11 @@
       });
     })();
 
-    // verificação simples de e-mail duplicado (só quando alterar)
+    // verificação simples de e-mail duplicado (apenas se mudou)
     (function() {
       const email    = document.getElementById('email');
       const msg      = document.getElementById('emailMsg');
       const original = /*[[${usuario.email}]]*/ '';
-
       async function checkEmail(value) {
         if (!value || value === original) { msg.style.display = 'none'; return false; }
         try {
@@ -110,7 +117,7 @@
       email.addEventListener('blur', () => checkEmail(email.value));
     })();
 
-    // validação de CPF
+    // validação rápida de CPF
     (function() {
       const cpfInput = document.getElementById('cpf');
       function validaCPF(cpf) {
