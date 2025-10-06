@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhes do Produto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .product-content {
+      display: flex;
+      gap: 20px;
+    }
+
+    .image-carousel {
+      flex: 1;
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    .carousel-slide {
+      display: none;
+    }
+
+    .carousel-slide.active {
+      display: block;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      border-radius: 15px;
+      object-fit: cover;
+      height: 400px; /* Mantém tamanho consistente */
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      font-size: 18px;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 50%;
+      user-select: none;
+    }
+
+    .carousel-prev {
+      left: 10px;
+    }
+
+    .carousel-next {
+      right: 10px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-title {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .product-price {
+      font-size: 1.8rem;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .product-description {
+      margin-bottom: 20px;
+    }
+
+    .buy-button {
+      width: 100%;
+      padding: 15px;
+      background: #667eea;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .buy-button:hover {
+      background: #555abf;
+    }
+  </style>
+</head>
+
+<body>
+    <a th:href="@{/listaProdutos}" class="back-button">
+        ← Voltar para Lista
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <h1>Visualização do Produto</h1>
+            <p>Veja como este produto aparece na loja para os clientes</p>
+        </div>
+
+        <div class="product-content">
+            <!-- Carrossel de Imagens -->
+            <div class="image-carousel">
+                <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}" class="carousel-container">
+                    <div th:each="imagem, iterStat : ${produto.imagens}" 
+                         class="carousel-slide" 
+                         th:classappend="${iterStat.first} ? 'active' : ''">
+                        <img th:src="${imagem.caminhoImagem}" 
+                             th:alt="${produto.nome}"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjVGN0ZBIi8+CjxwYXRoIGQ9Ik0yMDAgMTAwQzE1NS44IDE0NC4yIDEwMCAxNTUuOCAxMDAgMjAwQzEwMCAyNDQuMiAxNTUuOCAyNTUuOCAyMDAgMzAwQzI0NC4yIDI1NS44IDMwMCAyNDQuMiAzMDAgMjAwQzMwMCAxNTUuOCAyNDQuMiAxNDQuMiAyMDAgMTAwWiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K'">
+                    </div>
+                    
+                    <button class="carousel-nav carousel-prev" onclick="changeSlide(-1)">❮</button>
+                    <button class="carousel-nav carousel-next" onclick="changeSlide(1)">❯</button>
+                    
+                    <div class="carousel-indicators">
+                        <span th:each="imagem, iterStat : ${produto.imagens}" 
+                              class="indicator" 
+                              th:classappend="${iterStat.first} ? 'active' : ''"
+                              th:onclick="'currentSlide(' + ${iterStat.index + 1} + ')'"></span>
+                    </div>
+                </div>
+                
+                <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}" class="no-image">
+                    📷 Nenhuma imagem disponível
+                </div>
+            </div>
+
+            <!-- Informações do Produto -->
+            <div class="product-info">
+                <h1 class="product-title" th:text="${produto.nome}">Nome do Produto</h1>
+                
+                <div class="product-price" th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">
+                    R$ 0,00
+                </div>
+
+                <div class="product-rating">
+                    <div class="stars">
+                        <span class="star" th:each="i : ${#numbers.sequence(1, 5)}" 
+                              th:classappend="${produto.avaliacao != null and i <= produto.avaliacao.intValue()} ? 'filled' : ''">★</span>
+                    </div>
+                    <span class="rating-text" th:if="${produto.avaliacao != null}" 
+                          th:text="${#numbers.formatDecimal(produto.avaliacao, 1, 'POINT', 1, 'COMMA')} + ' de 5 estrelas'">
+                        0.0 de 5 estrelas
+                    </span>
+                    <span class="rating-text" th:if="${produto.avaliacao == null}">Sem avaliações</span>
+                </div>
+
+                <div class="product-stock">
+                    <span class="stock-icon">📦</span>
+                    <span class="stock-text" th:text="'Estoque: ' + ${produto.qtdEstoque} + ' unidades disponíveis'">
+                        Estoque: 0 unidades disponíveis
+                    </span>
+                </div>
+
+                <div class="product-description" th:if="${produto.descricao != null and !produto.descricao.isEmpty()}">
+                    <h3>Descrição do Produto</h3>
+                    <p th:text="${produto.descricao}">Descrição não disponível</p>
+                </div>
+
+                <div class="buy-section">
+                    <button class="buy-button" disabled>
+                        🛒 Comprar Agora - Modo Visualização
+                    </button>
+                    <div class="preview-notice">
+                        ⚠️ Este é o modo de visualização. O botão de compra está desabilitado para demonstração.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const indicators = document.querySelectorAll('.indicator');
+
+        function showSlide(index) {
+            // Remove active class from all slides and indicators
+            slides.forEach(slide => slide.classList.remove('active'));
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+
+            // Add active class to current slide and indicator
+            if (slides[index]) {
+                slides[index].classList.add('active');
+            }
+            if (indicators[index]) {
+                indicators[index].classList.add('active');
+            }
+        }
+
+        function changeSlide(direction) {
+            currentSlideIndex += direction;
+            
+            if (currentSlideIndex >= slides.length) {
+                currentSlideIndex = 0;
+            } else if (currentSlideIndex < 0) {
+                currentSlideIndex = slides.length - 1;
+            }
+            
+            showSlide(currentSlideIndex);
+        }
+
+        function currentSlide(index) {
+            currentSlideIndex = index - 1;
+            showSlide(currentSlideIndex);
+        }
+
+        // Auto-slide (opcional)
+        setInterval(() => {
+            if (slides.length > 1) {
+                changeSlide(1);
+            }
+        }, 5000);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeSlide(1);
+            }
+        });
+
+        // Inicia o carrossel exibindo a primeira imagem
+        if (slides.length > 0) {
+            showSlide(0);
+        }
+    </script>
+</body>
+
+</html>

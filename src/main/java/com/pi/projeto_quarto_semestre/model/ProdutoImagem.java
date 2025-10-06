@@ -72,4 +72,12 @@ public class ProdutoImagem {
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
+
+    public String getCaminhoRelativo() {
+        return caminhoRelativo;
+    }
+
+    public void setCaminhoRelativo(String caminhoRelativo) {
+        this.caminhoRelativo = caminhoRelativo;
+    }
 }

@@ -22,15 +22,7 @@ public class LoginController {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @GetMapping("/")
-    public String home() {
-        return "index"; // nome da view (ex: index.html ou index.jsp)
-    }
-
-    @GetMapping("/index")
-    public String home2() {
-        return "index"; // nome da view (ex: index.html ou index.jsp)
-    }
+    
 
     @GetMapping("/login")
     public String login(HttpSession session) {

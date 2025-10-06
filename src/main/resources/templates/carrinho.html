@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carrinho de Compras</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    margin: 0; padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+  }
+  h1 {
+    color: #667eea;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  th, td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background-color: #667eea;
+    color: white;
+  }
+  .total {
+    text-align: right;
+    font-weight: bold;
+    margin-top: 15px;
+    font-size: 1.2rem;
+  }
+  .btn-clear {
+    margin-top: 20px;
+    background: #dc3545;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-clear:hover {
+    background: #b02a37;
+  }
+  a {
+    text-decoration: none;
+    color: #667eea;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <a href="detalhesproduto.html" style="text-decoration:none;">← Continuar Comprando</a>
+  <h1>Seu Carrinho</h1>
+  <table id="cart-table">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Preço Unitário</th>
+        <th>Quantidade</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Produtos aqui -->
+    </tbody>
+  </table>
+
+  <div class="total" id="total-price">Total: R$ 0,00</div>
+  <button class="btn-clear" id="clear-cart">Limpar Carrinho</button>
+</div>
+
+<script>
+  function formatPrice(valor) {
+    return "R$ " + valor.toFixed(2).replace('.', ',');
+  }
+
+  function renderCart() {
+    const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+    const tbody = document.querySelector('#cart-table tbody');
+    tbody.innerHTML = '';
+
+    let total = 0;
+
+    if (carrinho.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Seu carrinho está vazio.</td></tr>';
+      document.getElementById('total-price').textContent = 'Total: R$ 0,00';
+      return;
+    }
+
+    carrinho.forEach(item => {
+      const subtotal = item.preco * item.quantidade;
+      total += subtotal;
+
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td>${item.nome}</td>
+        <td>${formatPrice(item.preco)}</td>
+        <td>${item.quantidade}</td>
+        <td>${formatPrice(subtotal)}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('total-price').textContent = 'Total: ' + formatPrice(total);
+  }
+
+  document.getElementById('clear-cart').addEventListener('click', () => {
+    localStorage.removeItem('carrinho');
+    renderCart();
+  });
+
+  renderCart();
+</script>
+
+</body>
+</html>

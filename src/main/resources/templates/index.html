@@ -1,13 +1,314 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagina Inicial</title>
-    <link rel="stylesheet" th:href="@{/css/base.css}">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home - Produtos</title>
+    <style>
+        /* Header */
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --background-light: #f9f9fb;
+            --text-dark: #222;
+            --text-muted: #666;
+            --border-color: #ddd;
+            --border-radius-sm: 6px;
+            --border-radius-md: 12px;
+            --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --transition: 0.3s ease;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--background-light);
+            margin: 0;
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .header-container a {
+            color: white;
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--border-radius-sm);
+            transition: background-color var(--transition);
+            user-select: none;
+        }
+
+        .header-container a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 2rem;
+        }
+
+        .search-form {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .search-form input[type="text"] {
+            padding: 0.6rem 1rem;
+            width: 280px;
+            max-width: 100%;
+            font-size: 1.05rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            transition: border-color var(--transition);
+            outline-offset: 2px;
+        }
+
+        .search-form input[type="text"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 6px var(--primary-color);
+        }
+
+        .search-form button {
+            padding: 0.6rem 1.4rem;
+            font-size: 1.05rem;
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: background-color var(--transition);
+            margin-left: 0.6rem;
+            user-select: none;
+        }
+
+        .search-form button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .search-form a {
+            margin-left: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .search-form a:hover {
+            text-decoration: underline;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius-md);
+            padding: 1.2rem 1rem 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition), transform var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-5px);
+        }
+
+        .card a {
+            color: inherit;
+            text-decoration: none;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card img {
+            width: 100%;
+            height: 140px;
+            object-fit: contain;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem;
+            background-color: var(--background-light);
+            user-select: none;
+        }
+
+        .card .product-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            min-height: 3rem;
+            color: var(--text-dark);
+        }
+
+        .card .product-price {
+            font-weight: 800;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .pagination {
+            margin: 3rem 0 1rem;
+            text-align: center;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .pagination a,
+        .pagination span {
+            margin: 0 6px;
+            padding: 9px 15px;
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            color: var(--primary-color);
+            border: 2px solid transparent;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-block;
+            transition: all var(--transition);
+        }
+
+        .pagination a:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .pagination .active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            cursor: default;
+            user-select: none;
+        }
+
+        .no-products {
+            text-align: center;
+            margin-top: 5rem;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+
+            .search-form input[type="text"] {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <a href="/login" class="btn-login">Fazer Login</a>
+
+    <header>
+        <div th:if="${usuarioLogado != null}">
+            Olá, <span th:text="${usuarioLogado.nome}">Usuário</span> |
+            <a th:href="@{/logout}">Sair</a>
+        </div>
+        <div th:if="${usuarioLogado == null}">
+            <a th:href="@{/login}">Login</a> |
+            <a th:href="@{/login}">Cadastro</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>🛒 Produtos em Destaque</h1>
+
+        <form th:action="@{ / }" method="get" class="search-form">
+            <input type="text" name="nome" placeholder="Buscar produto..." th:value="${filtroNome}" />
+            <button type="submit">🔍 Buscar</button>
+            <a th:href="@{/}" style="margin-left: 10px; color: #888; text-decoration: none;">Limpar</a>
+        </form>
+
+        <div th:if="${produtos != null and !produtos.isEmpty()}" class="grid">
+            <div th:each="produto : ${produtos}" class="card">
+                <a th:href="@{/produto/detalhes(id=${produto.id})}">
+                    <img th:if="${produto.imagens != null and !produto.imagens.isEmpty()}"
+                        th:src="@{${produto.imagens.?[imagemPadrao == true]?.get(0)?.caminhoImagem}}"
+                        alt="Imagem do produto" />
+                    <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
+                        style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
+                        📷
+                    </div>
+
+                    <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
+                    <div class="product-price"
+                        th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                </a>
+            </div>
+
+        </div>
+
+        <div th:if="${produtos == null or produtos.isEmpty()}" class="no-products">
+            <p>Nenhum produto encontrado.</p>
+        </div>
+
+        <div class="pagination" th:if="${totalPaginas > 1}">
+            <a th:if="${paginaAtual > 0}" th:href="@{/(page=${paginaAtual - 1}, nome=${filtroNome})}">
+                ← Anterior
+            </a>
+
+            <span th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}">
+                <a th:href="@{/(page=${i}, nome=${filtroNome})}" th:text="${i + 1}"
+                    th:classappend="${i == paginaAtual} ? 'active' : ''">
+                </a>
+            </span>
+
+            <a th:if="${paginaAtual < totalPaginas - 1}" th:href="@{/(page=${paginaAtual + 1}, nome=${filtroNome})}">
+                Próxima →
+            </a>
+        </div>
+    </div>
 </body>
+
 </html>
