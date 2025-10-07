@@ -72,43 +72,6 @@ public class HomeController {
         return "index"; // seu template home.html ou index.html
     }
 
-    @GetMapping("/index")
-    public String home2(
-            @RequestParam(name = "page", defaultValue = "0") int paginaAtual,
-            @RequestParam(name = "nome", required = false) String filtroNome,
-            Model model,
-            HttpSession session) {
-
-        // Recupera email do usuário logado na sessão
-        String emailUsuario = (String) session.getAttribute("emailUsuario");
-
-        if (emailUsuario != null) {
-            // Busca o usuário no banco pelo email
-            Usuario usuario = usuarioRepository.findByEmail(emailUsuario);
-            model.addAttribute("usuarioLogado", usuario);
-        } else {
-            model.addAttribute("usuarioLogado", null);
-        }
-
-        int tamanhoPagina = 12;
-        Page<Produto> paginaProdutos;
-
-        if (filtroNome != null && !filtroNome.isEmpty()) {
-            paginaProdutos = produtoRepository.findByNomeContainingIgnoreCaseOrderByIdDesc(
-                    filtroNome, PageRequest.of(paginaAtual, tamanhoPagina));
-        } else {
-            paginaProdutos = produtoRepository.findAllByOrderByCriadoEmDesc(
-                    PageRequest.of(paginaAtual, tamanhoPagina));
-        }
-
-        model.addAttribute("produtos", paginaProdutos.getContent());
-        model.addAttribute("paginaAtual", paginaAtual);
-        model.addAttribute("totalPaginas", paginaProdutos.getTotalPages());
-        model.addAttribute("filtroNome", filtroNome);
-
-        return "index"; // seu template home.html ou index.html
-    }
-
     @GetMapping("/produto/{id}")
 public String mostrarDetalhesProduto(@PathVariable Long id, Model model) {
     Optional<Produto> produtoOptional = produtoRepository.findById(id);
