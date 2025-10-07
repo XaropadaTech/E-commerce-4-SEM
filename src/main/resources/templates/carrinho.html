@@ -84,8 +84,8 @@
 </div>
 
 <script>
-  function formatPrice(valor) {
-    return "R$ " + valor.toFixed(2).replace('.', ',');
+   function formatPrice(v) {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   function renderCart() {

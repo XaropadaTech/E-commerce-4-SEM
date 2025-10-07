@@ -173,7 +173,9 @@
                 </div>
 
                 <div class="buy-section">
-                    <button class="buy-button" disabled>
+                    <button class="buy-button"  
+                    onclick="addToCart(this)"
+                    th:attr="data-id=${produto.id}, data-nome=${produto.nome}, data-preco=${produto.preco}">
                         🛒 Comprar 
                     </button>
                  
@@ -238,7 +240,38 @@
         if (slides.length > 0) {
             showSlide(0);
         }
-    </script>
+
+        // ADICIONANDO PRODUTO NO CARRINHO
+        function getActiveImage() {
+    const img = document.querySelector('.carousel-slide.active img')
+      || document.querySelector('.carousel-slide img');
+    return img ? img.getAttribute('src') : '';
+  }
+
+  function addToCart(btn) {
+    const id = parseInt(btn.dataset.id, 10);
+    const nome = btn.dataset.nome || 'Produto';
+    const preco = parseFloat(btn.dataset.preco) || 0;
+    const imagem = getActiveImage();
+
+    const KEY = 'carrinho';
+    const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+    const idx = carrinho.findIndex(p => p.id === id);
+    if (idx >= 0) {
+      // incremente o CAMPO QUE O CARRINHO USA
+      carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? carrinho[idx].qtd ?? 0) || 0) + 1;
+    } else {
+      carrinho.push({
+        id, nome, preco, imagem,
+        quantidade: 1    // <--- use "quantidade"
+      });
+    }
+
+    localStorage.setItem(KEY, JSON.stringify(carrinho));
+    window.location.href = '/carrinho';
+  }
+</script>
 </body>
 
 </html>
