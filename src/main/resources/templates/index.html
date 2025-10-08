@@ -198,6 +198,21 @@
             font-size: 1.2rem;
         }
 
+        .badge {
+            display: inline-block;
+            min-width: 18px;
+            padding: 2px 6px;
+            margin-left: 6px;
+            border-radius: 12px;
+            background: #ffc107;   /* amarelinho padrão; mude se quiser */
+            color: #222;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+
         .pagination {
             margin: 3rem 0 2rem;
             text-align: center;
@@ -272,11 +287,13 @@
     </a>
   </div>
 
-  <nav style="display: flex; align-items: center;">
-    <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Login</a>
-    <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Cadastro</a>
-    <a href="/carrinho" title="Ver Carrinho" style="color: white; text-decoration: none; font-size: 1.5rem;">🛒</a>
-  </nav>
+    <nav style="display: flex; align-items: center;">
+        <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Login</a>
+        <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Cadastro</a>
+        <a href="/carrinho" title="Ver Carrinho" style="color: white; text-decoration: none; font-size: 1.5rem;">
+        🛒 <span id="cart-count" class="badge"></span>
+        </a>  
+    </nav>
 </header>
 
     <div class="container">
@@ -327,6 +344,33 @@
             </a>
         </div>
     </div>
+
+    <script>
+        function getCartCount() {
+            try {
+            const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+            return carrinho.reduce((acc, it) => acc + Number(it.quantidade ?? it.qtd ?? 0), 0);
+            } catch (e) {
+            return 0;
+            }
+        }
+
+        function renderCartCount() {
+            const el = document.getElementById('cart-count');
+            if (!el) return;
+            const n = getCartCount();
+            el.textContent = n > 0 ? n : '';
+        }
+
+        // Atualiza ao carregar a página
+        document.addEventListener('DOMContentLoaded', renderCartCount);
+
+        // (Opcional) Atualiza se o carrinho mudar em outra aba
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'carrinho') renderCartCount();
+        });
+    </script>
+
 </body>
 
 </html>
