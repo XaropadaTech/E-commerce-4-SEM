@@ -136,6 +136,23 @@
     if (info) info.textContent = 'Frete selecionado: ' + formatPrice(current);
   }
 
+  // Atualiza quantidade de um item no localStorage (+/-). se newQty <= 0 remove item.
+  function updateItemQuantity(id, delta){
+    const cart = getCart();
+    const idx = cart.findIndex(p => Number(p.id) === Number(id));
+    if(idx === -1) return;
+    const current = Number(cart[idx].quantidade ?? cart[idx].qtd ?? 0) || 0;
+    const newQty = current + delta;
+    if(newQty <= 0){
+      cart.splice(idx, 1); // remove item se zerar
+    } else {
+      cart[idx].quantidade = newQty;
+    }
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    // Re-render e atualiza UI
+    renderCart();
+  }
+
   function renderCart() {
     const carrinho = getCart();
     const tbody = document.querySelector('#cart-table tbody');
@@ -160,7 +177,13 @@
       tr.innerHTML = `
         <td>${item.nome}</td>
         <td>${formatPrice(preco)}</td>
-        <td>${quantidade}</td>
+        <td>
+          <div class="qty-control" style="display:flex;align-items:center;gap:8px;">
+            <button class="btn-qty" data-action="decrease" data-id="${item.id}" style="padding:6px 10px;border-radius:6px;">−</button>
+            <span class="qty-value">${quantidade}</span>
+            <button class="btn-qty" data-action="increase" data-id="${item.id}" style="padding:6px 10px;border-radius:6px;">+</button>
+          </div>
+        </td>
         <td>${formatPrice(linha)}</td>
       `;
       tbody.appendChild(tr);
@@ -173,6 +196,16 @@
     applySavedFreteToUI();
     document.getElementById('total-price').textContent = 'Total: ' + formatPrice(total);
   }
+
+  // Delegação de clique para + / - na tabela
+  document.querySelector('#cart-table tbody').addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-qty');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    if (action === 'increase') updateItemQuantity(id, +1);
+    else if (action === 'decrease') updateItemQuantity(id, -1);
+  });
 
   // Muda frete ao selecionar opção
   document.addEventListener('change', (e) => {
@@ -188,7 +221,7 @@
   // Limpar carrinho (e frete, se quiser)
   document.getElementById('clear-cart').addEventListener('click', () => {
     localStorage.removeItem(CART_KEY);
-    // Se quiser manter o frete mesmo com carrinho limpo, comente a linha abaixo:
+    // Manter o frete mesmo com carrinho limpo, comente a linha abaixo:
     localStorage.removeItem(FRETE_KEY);
     renderCart();
   });
