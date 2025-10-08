@@ -83,6 +83,13 @@
             color: var(--primary-color);
         }
 
+        .header-logo {
+            height: 120px; /* Define a altura da sua logo. Ajuste conforme necessário. */
+            width: auto;  /* Garante que a largura se ajuste automaticamente mantendo a proporção. */
+            display: block;
+            margin-left: 50px;
+            padding: 0;
+        }
         .container {
             max-width: 1100px;
             margin: 2rem auto;
@@ -252,6 +259,20 @@
             font-size: 1.2rem;
         }
 
+        .buy-inline{
+            margin-top: .75rem;
+            padding: .6rem .9rem;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .buy-inline:hover{ background: var(--primary-hover); }
+
+
         @media (max-width: 768px) {
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -280,10 +301,10 @@
 
 <body>
 
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #007bff; color: white; font-family: Arial, sans-serif;">
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #053669; color: white; font-family: Arial, sans-serif;">
   <div>
     <a href="/" style="display: inline-block;">
-      <img src="/imagens/logo_sem_fundo.png" alt="Logo da Empresa" style="height: 140px;">
+      <img class="header-logo" src="/images/logo.png" alt="Logo Tenguam Shop">
     </a>
   </div>
 
@@ -313,15 +334,23 @@
                         alt="Imagem do produto" />
                     <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
                         style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
-                        📷
+                    📷
                     </div>
 
                     <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
                     <div class="product-price"
                         th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
                 </a>
-            </div>
 
+                <!-- Botão comprar que NÃO navega -->
+                <button
+                    type="button"
+                    class="buy-inline"
+                    data-add-index
+                    th:attr="data-id=${produto.id}, data-nome=${produto.nome}, data-preco=${produto.preco}">
+                    🛒 Comprar
+                </button>
+            </div>
         </div>
 
         <div th:if="${produtos == null or produtos.isEmpty()}" class="no-products">
@@ -369,6 +398,64 @@
         window.addEventListener('storage', (e) => {
             if (e.key === 'carrinho') renderCartCount();
         });
+
+
+        function getCardImageSrc(btn){
+    const card = btn.closest('.card');
+    const img = card ? card.querySelector('img') : null;
+    return img ? img.getAttribute('src') : '';
+  }
+
+  function addItemLocalStorage(item){
+    const KEY = 'carrinho';
+    const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
+    const idx = carrinho.findIndex(p => p.id === item.id);
+    if (idx >= 0) {
+      carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? carrinho[idx].qtd ?? 0) || 0) + 1;
+    } else {
+      carrinho.push({ ...item, quantidade: 1 });
+    }
+    localStorage.setItem(KEY, JSON.stringify(carrinho));
+  }
+
+  // Toast simples (feedback)
+  function showToast(msg='Produto adicionado ao carrinho!'){
+    let t = document.getElementById('toast');
+    if (!t){
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.position='fixed'; t.style.bottom='20px'; t.style.right='20px';
+      t.style.padding='10px 14px'; t.style.background='#222'; t.style.color='#fff';
+      t.style.borderRadius='10px'; t.style.boxShadow='0 6px 18px rgba(0,0,0,.2)';
+      t.style.transition='opacity .3s'; t.style.zIndex='9999';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = '1';
+    setTimeout(()=> t.style.opacity = '0', 1200);
+  }
+
+  // Captura cliques nos botões de comprar do index
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-add-index]');
+    if (!btn) return;
+
+    // impede que o clique no botão acione o <a> do card
+    e.preventDefault();
+    e.stopPropagation();
+
+    const id    = parseInt(btn.dataset.id, 10);
+    const nome  = btn.dataset.nome || 'Produto';
+    const preco = parseFloat(btn.dataset.preco || 0);
+    const imagem = getCardImageSrc(btn);
+
+    addItemLocalStorage({ id, nome, preco, imagem });
+
+    // atualiza seu badge existente
+    if (typeof renderCartCount === 'function') { try { renderCartCount(); } catch(_){} }
+
+    // permanece na página e mostra confirmação
+    showToast();
+  });
     </script>
 
 </body>

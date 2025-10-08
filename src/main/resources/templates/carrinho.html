@@ -79,54 +79,124 @@
     </tbody>
   </table>
 
+  <div id="shipping-section" style="margin-top: 20px;">
+  <h3 style="margin:8px 0;">Escolha o frete</h3>
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap;">
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="radio" name="shipping" value="9.90"> Econômico — R$ 9,90
+    </label>
+
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="radio" name="shipping" value="19.90"> Padrão — R$ 19,90
+    </label>
+
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="radio" name="shipping" value="29.90"> Expresso — R$ 29,90
+    </label>
+  </div>
+
+  <div id="shipping-selected" style="margin-top:10px; color:#333; font-weight:600;">
+    Frete selecionado: R$ 0,00
+  </div>
+</div>
+
   <div class="total" id="total-price">Total: R$ 0,00</div>
   <button class="btn-clear" id="clear-cart">Limpar Carrinho</button>
 </div>
 
 <script>
-   function formatPrice(v) {
-    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const CART_KEY  = 'carrinho';
+  const FRETE_KEY = 'freteSelecionado'; // guarda o valor escolhido (Number)
+
+  function formatPrice(v) {
+    return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function getCart() {
+    try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function getFrete() {
+    const v = Number(localStorage.getItem(FRETE_KEY));
+    return isNaN(v) ? 0 : v;
+  }
+
+  function setFrete(v) {
+    localStorage.setItem(FRETE_KEY, String(v));
+  }
+
+  // Marca no UI o frete salvo e atualiza o texto auxiliar
+  function applySavedFreteToUI() {
+    const radios = document.querySelectorAll('input[name="shipping"]');
+    const current = getFrete();
+    radios.forEach(r => r.checked = (Number(r.value) === current));
+    const info = document.getElementById('shipping-selected');
+    if (info) info.textContent = 'Frete selecionado: ' + formatPrice(current);
   }
 
   function renderCart() {
-    const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+    const carrinho = getCart();
     const tbody = document.querySelector('#cart-table tbody');
     tbody.innerHTML = '';
 
-    let total = 0;
+    let subtotal = 0;
 
     if (carrinho.length === 0) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Seu carrinho está vazio.</td></tr>';
       document.getElementById('total-price').textContent = 'Total: R$ 0,00';
+      applySavedFreteToUI(); // mantém UI consistente
       return;
     }
 
     carrinho.forEach(item => {
-      const subtotal = item.preco * item.quantidade;
-      total += subtotal;
+      const quantidade = Number(item.quantidade ?? item.qtd ?? 1);
+      const preco = Number(item.preco ?? 0);
+      const linha = preco * quantidade;
+      subtotal += linha;
 
       const tr = document.createElement('tr');
-
       tr.innerHTML = `
         <td>${item.nome}</td>
-        <td>${formatPrice(item.preco)}</td>
-        <td>${item.quantidade}</td>
-        <td>${formatPrice(subtotal)}</td>
+        <td>${formatPrice(preco)}</td>
+        <td>${quantidade}</td>
+        <td>${formatPrice(linha)}</td>
       `;
-
       tbody.appendChild(tr);
     });
 
+    // Somatório com frete
+    const frete = getFrete();           // 0, 9.90, 19.90 ou 29.90 (ou o que você configurar nos radios)
+    const total = subtotal + frete;
+
+    applySavedFreteToUI();
     document.getElementById('total-price').textContent = 'Total: ' + formatPrice(total);
   }
 
+  // Muda frete ao selecionar opção
+  document.addEventListener('change', (e) => {
+    const r = e.target;
+    if (r && r.name === 'shipping') {
+      const v = Number(r.value);
+      setFrete(v);
+      applySavedFreteToUI();
+      renderCart();
+    }
+  });
+
+  // Limpar carrinho (e frete, se quiser)
   document.getElementById('clear-cart').addEventListener('click', () => {
-    localStorage.removeItem('carrinho');
+    localStorage.removeItem(CART_KEY);
+    // Se quiser manter o frete mesmo com carrinho limpo, comente a linha abaixo:
+    localStorage.removeItem(FRETE_KEY);
     renderCart();
   });
 
+  // Inicializa
   renderCart();
 </script>
+
 
 </body>
 </html>
