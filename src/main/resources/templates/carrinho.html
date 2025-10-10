@@ -64,6 +64,7 @@
 <div class="container">
   <a href="/" style="text-decoration:none; display: block; margin-bottom: 10px;">← Continuar Comprando</a>
   <h1>Seu Carrinho</h1>
+
   <table id="cart-table">
     <thead>
       <tr>
@@ -79,56 +80,96 @@
     </tbody>
   </table>
 
-  <div id="shipping-section" style="margin: 15px auto; max-width: 70%; text-align: center;">
-  <h3 style="margin:5px 0; font-size: 1.1rem;">Escolha o frete</h3>
+  <!-- CEP + Frete -->
+  <div id="shipping-box" style="margin: 18px auto; max-width: 70%; text-align: center;">
+    <h3 style="margin:6px 0; font-size: 1.1rem;">Calcular frete</h3>
 
-  <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content: center;">
-    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-      <input type="radio" name="shipping" value="9.90"> Econômico — R$ 9,90
-    </label>
+    <!-- CEP -->
+    <div style="display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">
+      <label for="cep-input" style="font-weight:600;">CEP:</label>
+      <input id="cep-input" type="text" inputmode="numeric" placeholder="00000-000"
+             style="padding:8px 10px; border:1px solid #ccc; border-radius:8px; width:140px;">
+      <button id="cep-apply" type="button"
+              style="padding:8px 12px; border:none; border-radius:8px; background:#667eea; color:#fff; font-weight:700; cursor:pointer;">
+        Aplicar
+      </button>
+      <button id="cep-clear" type="button"
+              style="padding:8px 12px; border:none; border-radius:8px; background:#b02a37; color:#fff; font-weight:700; cursor:pointer;">
+        Limpar CEP
+      </button>
+      <span id="cep-status" style="margin-left:8px; color:#888;"></span>
+    </div>
 
-    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-      <input type="radio" name="shipping" value="19.90"> Padrão — R$ 19,90
-    </label>
+    <!-- Frete -->
+    <div id="shipping-section" style="margin: 10px auto; max-width: 70%; text-align: center; opacity:.5; pointer-events:none;">
+      <h4 style="margin:5px 0; font-size: 1rem;">Escolha o frete</h4>
 
-    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-      <input type="radio" name="shipping" value="29.90"> Expresso — R$ 29,90
-    </label>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content: center;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:not-allowed;">
+          <input type="radio" name="shipping" value="9.90" disabled> Econômico — R$ 9,90
+        </label>
+
+        <label style="display:flex; align-items:center; gap:8px; cursor:not-allowed;">
+          <input type="radio" name="shipping" value="19.90" disabled> Padrão — R$ 19,90
+        </label>
+
+        <label style="display:flex; align-items:center; gap:8px; cursor:not-allowed;">
+          <input type="radio" name="shipping" value="29.90" disabled> Expresso — R$ 29,90
+        </label>
+      </div>
+
+      <div id="shipping-selected" style="margin-top:10px; color:#333; font-weight:600;">
+        Frete selecionado: R$ 0,00
+      </div>
+    </div>
   </div>
-
-  <div id="shipping-selected" style="margin-top:10px; color:#333; font-weight:600;">
-    Frete selecionado: R$ 0,00
-  </div>
-</div>
 
   <div class="total" id="total-price">Total: R$ 0,00</div>
   <button class="btn-clear" id="clear-cart">Limpar Carrinho</button>
 </div>
 
 <script>
-  const CART_KEY  = 'carrinho';
-  const FRETE_KEY = 'freteSelecionado'; // guarda o valor escolhido (Number)
+  const CART_KEY   = 'carrinho';
+  const FRETE_KEY  = 'freteSelecionado';
+  const CEP_KEY    = 'cepSelecionado';
 
   function formatPrice(v) {
     return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
+  function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } }
+  function getFrete(){ const v = Number(localStorage.getItem(FRETE_KEY)); return isNaN(v) ? 0 : v; }
+  function setFrete(v){ localStorage.setItem(FRETE_KEY, String(v)); }
 
-  function getCart() {
-    try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
-    catch { return []; }
+  function normalizeCep(raw){
+    const digits = String(raw||'').replace(/\D/g,'').slice(0,8);
+    if (digits.length < 8) return null;
+    return digits.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+  }
+  function getCep(){ return localStorage.getItem(CEP_KEY) || ''; }
+  function setCep(cep){ if (cep) localStorage.setItem(CEP_KEY, cep); }
+
+  // Ativa/desativa fretes
+  function updateShippingAvailability(){
+    const cep = getCep();
+    const section = document.getElementById('shipping-section');
+    const radios = document.querySelectorAll('input[name="shipping"]');
+    const valid = !!normalizeCep(cep);
+
+    section.style.opacity = valid ? '1' : '.5';
+    section.style.pointerEvents = valid ? 'auto' : 'none';
+    radios.forEach(r => {
+      r.disabled = !valid;
+      r.parentElement.style.cursor = valid ? 'pointer' : 'not-allowed';
+    });
+
+    const status = document.getElementById('cep-status');
+    if (status){
+      status.style.color = valid ? '#2e7d32' : (cep ? '#b00020' : '#888');
+      status.textContent = valid ? `CEP aplicado: ${cep}` : (cep ? 'CEP inválido' : 'Informe seu CEP');
+    }
   }
 
-  function getFrete() {
-    const v = Number(localStorage.getItem(FRETE_KEY));
-    return isNaN(v) ? 0 : v;
-  }
-
-  function setFrete(v) {
-    localStorage.setItem(FRETE_KEY, String(v));
-  }
-
-  // Marca no UI o frete salvo e atualiza o texto auxiliar
-  function applySavedFreteToUI() {
+  function applySavedFreteToUI(){
     const radios = document.querySelectorAll('input[name="shipping"]');
     const current = getFrete();
     radios.forEach(r => r.checked = (Number(r.value) === current));
@@ -136,7 +177,7 @@
     if (info) info.textContent = 'Frete selecionado: ' + formatPrice(current);
   }
 
-  // Atualiza quantidade de um item no localStorage (+/-). se newQty <= 0 remove item.
+  // Quantidade e remoção
   function updateItemQuantity(id, delta){
     const cart = getCart();
     const idx = cart.findIndex(p => Number(p.id) === Number(id));
@@ -144,27 +185,24 @@
     const current = Number(cart[idx].quantidade ?? cart[idx].qtd ?? 0) || 0;
     const newQty = current + delta;
     if(newQty <= 0){
-      cart.splice(idx, 1); // remove item se zerar
+      cart.splice(idx, 1);
     } else {
       cart[idx].quantidade = newQty;
     }
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    // Re-render e atualiza UI
     renderCart();
   }
-
-  // Remove completamente um item do carrinho (independente da quantidade)
-  function removeItem(id) {
+  function removeItem(id){
     const cart = getCart();
     const idx = cart.findIndex(p => Number(p.id) === Number(id));
-    if(idx !== -1) {
-      cart.splice(idx, 1); // remove item completamente
+    if(idx !== -1){
+      cart.splice(idx, 1);
       localStorage.setItem(CART_KEY, JSON.stringify(cart));
       renderCart();
     }
   }
 
-  function renderCart() {
+  function renderCart(){
     const carrinho = getCart();
     const tbody = document.querySelector('#cart-table tbody');
     tbody.innerHTML = '';
@@ -174,7 +212,8 @@
     if (carrinho.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">Seu carrinho está vazio.</td></tr>';
       document.getElementById('total-price').textContent = 'Total: R$ 0,00';
-      applySavedFreteToUI(); // mantém UI consistente
+      updateShippingAvailability();
+      applySavedFreteToUI();
       return;
     }
 
@@ -196,43 +235,64 @@
           </div>
         </td>
         <td>${formatPrice(linha)}</td>
-        <td>
-          <button class="btn-remove" data-action="remove" data-id="${item.id}" title="Remover produto do carrinho">
-            🗑️
-          </button>
-        </td>
+        <td><button class="btn-remove" data-action="remove" data-id="${item.id}">🗑️</button></td>
       `;
       tbody.appendChild(tr);
     });
 
-    // Somatório com frete
-    const frete = getFrete();           // 0, 9.90, 19.90 ou 29.90 (ou o que você configurar nos radios)
-    const total = subtotal + frete;
-
+    updateShippingAvailability();
     applySavedFreteToUI();
+
+    const frete = getFrete();
+    const total = subtotal + frete;
     document.getElementById('total-price').textContent = 'Total: ' + formatPrice(total);
   }
 
-  // Delegação de clique para + / - / remover na tabela
+  // Botões da tabela
   document.querySelector('#cart-table tbody').addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-qty, .btn-remove');
     if (!btn) return;
     const id = btn.dataset.id;
     const action = btn.dataset.action;
-    
-    if (action === 'increase') {
-      updateItemQuantity(id, +1);
-    } else if (action === 'decrease') {
-      updateItemQuantity(id, -1);
-    } else if (action === 'remove') {
-      // Confirmação antes de remover
-      if (confirm('Tem certeza que deseja remover este produto do carrinho?')) {
-        removeItem(id);
-      }
-    }
+
+    if (action === 'increase') updateItemQuantity(id, +1);
+    else if (action === 'decrease') updateItemQuantity(id, -1);
+    else if (action === 'remove' && confirm('Remover este produto?')) removeItem(id);
   });
 
-  // Muda frete ao selecionar opção
+  // Aplicar CEP
+  document.getElementById('cep-apply').addEventListener('click', () => {
+    const input = document.getElementById('cep-input');
+    const norm = normalizeCep(input.value);
+    const status = document.getElementById('cep-status');
+    if (!norm){
+      if (status){ status.style.color = '#b00020'; status.textContent = 'CEP inválido'; }
+      updateShippingAvailability();
+      return;
+    }
+    setCep(norm);
+    if (status){ status.style.color = '#2e7d32'; status.textContent = `CEP aplicado: ${norm}`; }
+    updateShippingAvailability();
+    renderCart();
+  });
+
+  // 🧹 Limpar CEP
+  document.getElementById('cep-clear').addEventListener('click', () => {
+    localStorage.removeItem(CEP_KEY);
+    localStorage.removeItem(FRETE_KEY);
+    document.getElementById('cep-input').value = '';
+    const status = document.getElementById('cep-status');
+    if (status){ status.textContent = 'CEP removido'; status.style.color = '#555'; }
+    updateShippingAvailability();
+    renderCart();
+  });
+
+  // Máscara de CEP
+  document.getElementById('cep-input').addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/[^\d-]/g,'').slice(0,9);
+  });
+
+  // Troca de frete
   document.addEventListener('change', (e) => {
     const r = e.target;
     if (r && r.name === 'shipping') {
@@ -243,18 +303,17 @@
     }
   });
 
-  // Limpar carrinho (e frete, se quiser)
+  // Limpar carrinho
   document.getElementById('clear-cart').addEventListener('click', () => {
     localStorage.removeItem(CART_KEY);
-    // Manter o frete mesmo com carrinho limpo, comente a linha abaixo:
     localStorage.removeItem(FRETE_KEY);
+    localStorage.removeItem(CEP_KEY);
     renderCart();
   });
 
-  // Inicializa
   renderCart();
 </script>
-
-
 </body>
+
+
 </html>
