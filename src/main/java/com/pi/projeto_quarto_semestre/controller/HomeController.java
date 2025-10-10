@@ -35,42 +35,42 @@ public class HomeController {
     private ProdutoImagemRepository produtoImagemRepository;
 
 
-    @GetMapping("/")
-    public String home(
-            @RequestParam(name = "page", defaultValue = "0") int paginaAtual,
-            @RequestParam(name = "nome", required = false) String filtroNome,
-            Model model,
-            HttpSession session) {
+   @GetMapping("/")
+public String home(
+        @RequestParam(name = "page", defaultValue = "0") int paginaAtual,
+        @RequestParam(name = "nome", required = false) String filtroNome,
+        Model model,
+        HttpSession session) {
 
-        // Recupera email do usuário logado na sessão
-        String emailUsuario = (String) session.getAttribute("emailUsuario");
+    // Recupera email do usuário logado na sessão
+    String emailUsuario = (String) session.getAttribute("emailUsuario");
 
-        if (emailUsuario != null) {
-            // Busca o usuário no banco pelo email
-            Usuario usuario = usuarioRepository.findByEmail(emailUsuario);
-            model.addAttribute("usuarioLogado", usuario);
-        } else {
-            model.addAttribute("usuarioLogado", null);
-        }
-
-        int tamanhoPagina = 12;
-        Page<Produto> paginaProdutos;
-
-        if (filtroNome != null && !filtroNome.isEmpty()) {
-            paginaProdutos = produtoRepository.findByNomeContainingIgnoreCaseOrderByIdDesc(
-                    filtroNome, PageRequest.of(paginaAtual, tamanhoPagina));
-        } else {
-            paginaProdutos = produtoRepository.findAllByOrderByCriadoEmDesc(
-                    PageRequest.of(paginaAtual, tamanhoPagina));
-        }
-
-        model.addAttribute("produtos", paginaProdutos.getContent());
-        model.addAttribute("paginaAtual", paginaAtual);
-        model.addAttribute("totalPaginas", paginaProdutos.getTotalPages());
-        model.addAttribute("filtroNome", filtroNome);
-
-        return "index"; // seu template home.html ou index.html
+    if (emailUsuario != null) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario);
+        model.addAttribute("usuarioLogado", usuario);
+    } else {
+        model.addAttribute("usuarioLogado", null);
     }
+
+    int tamanhoPagina = 12;
+    Page<Produto> paginaProdutos;
+
+    // 🔹 Usa apenas produtos com status = true
+    if (filtroNome != null && !filtroNome.isEmpty()) {
+        paginaProdutos = produtoRepository.findByNomeContainingIgnoreCaseAndStatusTrueOrderByIdDesc(
+                filtroNome, PageRequest.of(paginaAtual, tamanhoPagina));
+    } else {
+        paginaProdutos = produtoRepository.findByStatusTrueOrderByCriadoEmDesc(
+                PageRequest.of(paginaAtual, tamanhoPagina));
+    }
+
+    model.addAttribute("produtos", paginaProdutos.getContent());
+    model.addAttribute("paginaAtual", paginaAtual);
+    model.addAttribute("totalPaginas", paginaProdutos.getTotalPages());
+    model.addAttribute("filtroNome", filtroNome);
+
+    return "index";
+}
 
     @GetMapping("/produto/{id}")
 public String mostrarDetalhesProduto(@PathVariable Long id, Model model) {
