@@ -259,18 +259,35 @@
             font-size: 1.2rem;
         }
 
+       .card-actions{
+        display:flex;
+        gap:.5rem;
+        margin-top:.75rem;
+        }
+
         .buy-inline{
-            margin-top: .75rem;
-            padding: .6rem .9rem;
-            border: none;
-            border-radius: 10px;
-            background: var(--primary-color);
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background .2s;
+        padding:.6rem .9rem;
+        border:none; border-radius:10px;
+        background: var(--primary-color);
+        color:#ffffff; font-weight:700;
+        cursor:pointer; transition:background .2s;
         }
         .buy-inline:hover{ background: var(--primary-hover); }
+
+        .details-btn{
+        display:inline-block;
+        padding:.6rem .9rem;
+        border-radius:10px;
+        border:1px solid var(--border-color);
+        background:#f5bc20;
+        color: var(--text-dark);
+        text-decoration:none;
+        font-weight:700;
+        transition: background .2s, border-color .2s;
+        }
+        .details-btn:hover{
+        background:#dfa70e; border-color:#cfd6e4;
+        }
 
 
         @media (max-width: 768px) {
@@ -327,11 +344,17 @@
         </form>
 
         <div th:if="${produtos != null and !produtos.isEmpty()}" class="grid">
-            <div th:each="produto : ${produtos}" class="card">
-                <a th:href="@{/produto/detalhes(id=${produto.id})}">
-                    <img th:if="${!produto.imagens.isEmpty()}"
-                         th:src="@{${produto.imagens[0].caminhoImagem}}"
-                         alt="Imagem do produto" />
+           <div th:each="produto : ${produtos}" class="card">
+            <!-- <a th:href="@{/produto/detalhes(id=${produto.id})}">  <--Vai para página de detalhes -->
+                <!-- IMAGEM: principal -> primeira -> placeholder -->
+                <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}">
+                <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) > 0}"
+                    th:src="${(produto.imagens.?[imagemPadrao])[0].caminhoImagem}"
+                    alt="Imagem do produto" />
+                <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) == 0}"
+                    th:src="${produto.imagens[0].caminhoImagem}"
+                    alt="Imagem do produto" />
+                </div>
                     <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
                         style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
                     📷
@@ -340,16 +363,23 @@
                     <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
                     <div class="product-price"
                         th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
-                </a>
+            </a>
 
-                <!-- Botão comprar que NÃO navega -->
-                <button
+                <!-- AÇÕES: Comprar (fica na página) + Detalhes (vai para detalhesProduto.html) -->
+                <div class="card-actions">
+                    <button
                     type="button"
                     class="buy-inline"
                     data-add-index
                     th:attr="data-id=${produto.id}, data-nome=${produto.nome}, data-preco=${produto.preco}">
                     🛒 Comprar
-                </button>
+                    </button>
+
+                    <a class="details-btn"
+                    th:href="@{/produto/detalhes(id=${produto.id})}">
+                    Detalhes
+                    </a>
+                </div>
             </div>
         </div>
 
