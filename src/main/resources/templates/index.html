@@ -329,9 +329,9 @@
         <div th:if="${produtos != null and !produtos.isEmpty()}" class="grid">
             <div th:each="produto : ${produtos}" class="card">
                 <a th:href="@{/produto/detalhes(id=${produto.id})}">
-                    <img th:if="${produto.imagens != null and !produto.imagens.isEmpty()}"
-                        th:src="@{${produto.imagens.?[imagemPadrao == true]?.get(0)?.caminhoImagem}}"
-                        alt="Imagem do produto" />
+                    <img th:if="${!produto.imagens.isEmpty()}"
+                         th:src="@{${produto.imagens[0].caminhoImagem}}"
+                         alt="Imagem do produto" />
                     <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
                         style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
                     📷
@@ -375,87 +375,99 @@
     </div>
 
     <script>
-        function getCartCount() {
-            try {
+        // --- FUNÇÕES DO CARRINHO ---
+
+    // Pega a quantidade total de itens no carrinho no localStorage
+    function getCartCount() {
+        try {
             const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            return carrinho.reduce((acc, it) => acc + Number(it.quantidade ?? it.qtd ?? 0), 0);
-            } catch (e) {
+            return carrinho.reduce((acc, it) => acc + Number(it.quantidade ?? 0), 0);
+        } catch (e) {
             return 0;
-            }
         }
+    }
 
-        function renderCartCount() {
-            const el = document.getElementById('cart-count');
-            if (!el) return;
-            const n = getCartCount();
-            el.textContent = n > 0 ? n : '';
+    // Atualiza o número no ícone do carrinho no header
+    function renderCartCount() {
+        const el = document.getElementById('cart-count');
+        if (!el) return;
+        const n = getCartCount();
+        el.textContent = n > 0 ? n : '';
+    }
+
+    // Pega o caminho da imagem do card que foi clicado
+    function getCardImageSrc(btn) {
+        const card = btn.closest('.card');
+        const img = card ? card.querySelector('img') : null;
+        return img ? img.getAttribute('src') : '';
+    }
+
+    // Adiciona um item no localStorage
+    function addItemLocalStorage(item) {
+        const KEY = 'carrinho';
+        const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
+        const idx = carrinho.findIndex(p => p.id === item.id);
+        if (idx >= 0) {
+            carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? 0) || 0) + 1;
+        } else {
+            carrinho.push({ ...item, quantidade: 1 });
         }
-
-        // Atualiza ao carregar a página
-        document.addEventListener('DOMContentLoaded', renderCartCount);
-
-        // (Opcional) Atualiza se o carrinho mudar em outra aba
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'carrinho') renderCartCount();
-        });
-
-
-        function getCardImageSrc(btn){
-    const card = btn.closest('.card');
-    const img = card ? card.querySelector('img') : null;
-    return img ? img.getAttribute('src') : '';
-  }
-
-  function addItemLocalStorage(item){
-    const KEY = 'carrinho';
-    const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
-    const idx = carrinho.findIndex(p => p.id === item.id);
-    if (idx >= 0) {
-      carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? carrinho[idx].qtd ?? 0) || 0) + 1;
-    } else {
-      carrinho.push({ ...item, quantidade: 1 });
+        localStorage.setItem(KEY, JSON.stringify(carrinho));
     }
-    localStorage.setItem(KEY, JSON.stringify(carrinho));
-  }
 
-  // Toast simples (feedback)
-  function showToast(msg='Produto adicionado ao carrinho!'){
-    let t = document.getElementById('toast');
-    if (!t){
-      t = document.createElement('div');
-      t.id = 'toast';
-      t.style.position='fixed'; t.style.bottom='20px'; t.style.right='20px';
-      t.style.padding='10px 14px'; t.style.background='#222'; t.style.color='#fff';
-      t.style.borderRadius='10px'; t.style.boxShadow='0 6px 18px rgba(0,0,0,.2)';
-      t.style.transition='opacity .3s'; t.style.zIndex='9999';
-      document.body.appendChild(t);
+    // Mostra uma mensagem de confirmação rápida
+    function showToast(msg = 'Produto adicionado ao carrinho!') {
+        let t = document.getElementById('toast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'toast';
+            // (Estilos do toast)
+            t.style.position = 'fixed'; t.style.bottom = '20px'; t.style.right = '20px';
+            t.style.padding = '12px 18px'; t.style.background = '#28a745'; t.style.color = '#fff';
+            t.style.borderRadius = '10px'; t.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
+            t.style.transition = 'opacity .3s, transform .3s'; t.style.zIndex = '9999';
+            t.style.transform = 'translateY(20px)'; t.style.opacity = '0';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        setTimeout(() => { // Efeito de aparecer
+            t.style.transform = 'translateY(0)';
+            t.style.opacity = '1';
+        }, 10);
+        setTimeout(() => { // Efeito de desaparecer
+            t.style.opacity = '0';
+            t.style.transform = 'translateY(20px)';
+        }, 2000); // A mensagem some depois de 2 segundos
     }
-    t.textContent = msg; t.style.opacity = '1';
-    setTimeout(()=> t.style.opacity = '0', 1200);
-  }
 
-  // Captura cliques nos botões de comprar do index
-  document.addEventListener('click', function(e){
-    const btn = e.target.closest('[data-add-index]');
-    if (!btn) return;
 
-    // impede que o clique no botão acione o <a> do card
-    e.preventDefault();
-    e.stopPropagation();
+    // --- EVENTOS ---
 
-    const id    = parseInt(btn.dataset.id, 10);
-    const nome  = btn.dataset.nome || 'Produto';
-    const preco = parseFloat(btn.dataset.preco || 0);
-    const imagem = getCardImageSrc(btn);
+    // Atualiza o contador do carrinho assim que a página carrega
+    document.addEventListener('DOMContentLoaded', renderCartCount);
 
-    addItemLocalStorage({ id, nome, preco, imagem });
+    // Captura os cliques nos botões "Comprar" da página
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-add-index]');
+        if (!btn) return;
 
-    // atualiza seu badge existente
-    if (typeof renderCartCount === 'function') { try { renderCartCount(); } catch(_){} }
+        // Impede que o clique no botão acione o link do card
+        e.preventDefault();
+        e.stopPropagation();
 
-    // permanece na página e mostra confirmação
-    showToast();
-  });
+        const id = parseInt(btn.dataset.id, 10);
+        const nome = btn.dataset.nome || 'Produto';
+        const preco = parseFloat(btn.dataset.preco || 0);
+        const imagem = getCardImageSrc(btn);
+
+        addItemLocalStorage({ id, nome, preco, imagem });
+        renderCartCount();
+        showToast();
+
+        // DECISÃO: Redirecionar ou não?
+        // Se quisermos redirecionar para o carrinho, adicionamos a linha abaixo:
+        window.location.href = '/carrinho';
+    });
     </script>
 
 </body>
