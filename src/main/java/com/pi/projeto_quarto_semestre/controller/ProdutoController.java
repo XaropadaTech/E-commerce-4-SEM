@@ -388,8 +388,21 @@ public class ProdutoController {
     }
 
     @GetMapping("/carrinho")
-    public String carrinho() {
-        return "carrinho"; // Isso diz para renderizar o template "carrinho.html" dentro da pasta produtos
+    public String carrinho(HttpSession session, Model model) {
+        // Verifica se o usuário está logado
+        String grupo = (String) session.getAttribute("grupoUsuario");
+        String nomeUsuario = (String) session.getAttribute("nomeUsuario");
+        
+        // Adiciona informações do usuário ao modelo (se logado)
+        if (grupo != null && nomeUsuario != null) {
+            model.addAttribute("usuarioLogado", true);
+            model.addAttribute("grupo", grupo);
+            model.addAttribute("nomeUsuario", nomeUsuario);
+        } else {
+            model.addAttribute("usuarioLogado", false);
+        }
+        
+        return "carrinho"; // Renderiza o template carrinho.html
     }
 
     @GetMapping("/produto/detalhes")

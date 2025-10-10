@@ -61,9 +61,8 @@
 </style>
 </head>
 <body>
-
 <div class="container">
-  <a href="/" style="text-decoration:none;">← Continuar Comprando</a>
+  <a href="/" style="text-decoration:none; display: block; margin-bottom: 10px;">← Continuar Comprando</a>
   <h1>Seu Carrinho</h1>
   <table id="cart-table">
     <thead>
@@ -72,6 +71,7 @@
         <th>Preço Unitário</th>
         <th>Quantidade</th>
         <th>Subtotal</th>
+        <th>Ações</th>
       </tr>
     </thead>
     <tbody>
@@ -79,10 +79,10 @@
     </tbody>
   </table>
 
-  <div id="shipping-section" style="margin-top: 20px;">
-  <h3 style="margin:8px 0;">Escolha o frete</h3>
+  <div id="shipping-section" style="margin: 15px auto; max-width: 70%; text-align: center;">
+  <h3 style="margin:5px 0; font-size: 1.1rem;">Escolha o frete</h3>
 
-  <div style="display:flex; gap:16px; flex-wrap:wrap;">
+  <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content: center;">
     <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
       <input type="radio" name="shipping" value="9.90"> Econômico — R$ 9,90
     </label>
@@ -153,6 +153,17 @@
     renderCart();
   }
 
+  // Remove completamente um item do carrinho (independente da quantidade)
+  function removeItem(id) {
+    const cart = getCart();
+    const idx = cart.findIndex(p => Number(p.id) === Number(id));
+    if(idx !== -1) {
+      cart.splice(idx, 1); // remove item completamente
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      renderCart();
+    }
+  }
+
   function renderCart() {
     const carrinho = getCart();
     const tbody = document.querySelector('#cart-table tbody');
@@ -161,7 +172,7 @@
     let subtotal = 0;
 
     if (carrinho.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Seu carrinho está vazio.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">Seu carrinho está vazio.</td></tr>';
       document.getElementById('total-price').textContent = 'Total: R$ 0,00';
       applySavedFreteToUI(); // mantém UI consistente
       return;
@@ -185,6 +196,11 @@
           </div>
         </td>
         <td>${formatPrice(linha)}</td>
+        <td>
+          <button class="btn-remove" data-action="remove" data-id="${item.id}" title="Remover produto do carrinho">
+            🗑️
+          </button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -197,14 +213,23 @@
     document.getElementById('total-price').textContent = 'Total: ' + formatPrice(total);
   }
 
-  // Delegação de clique para + / - na tabela
+  // Delegação de clique para + / - / remover na tabela
   document.querySelector('#cart-table tbody').addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-qty');
+    const btn = e.target.closest('.btn-qty, .btn-remove');
     if (!btn) return;
     const id = btn.dataset.id;
     const action = btn.dataset.action;
-    if (action === 'increase') updateItemQuantity(id, +1);
-    else if (action === 'decrease') updateItemQuantity(id, -1);
+    
+    if (action === 'increase') {
+      updateItemQuantity(id, +1);
+    } else if (action === 'decrease') {
+      updateItemQuantity(id, -1);
+    } else if (action === 'remove') {
+      // Confirmação antes de remover
+      if (confirm('Tem certeza que deseja remover este produto do carrinho?')) {
+        removeItem(id);
+      }
+    }
   });
 
   // Muda frete ao selecionar opção
