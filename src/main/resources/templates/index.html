@@ -84,12 +84,15 @@
         }
 
         .header-logo {
-            height: 120px; /* Define a altura da sua logo. Ajuste conforme necessário. */
-            width: auto;  /* Garante que a largura se ajuste automaticamente mantendo a proporção. */
+            height: 120px;
+            /* Define a altura da sua logo. Ajuste conforme necessário. */
+            width: auto;
+            /* Garante que a largura se ajuste automaticamente mantendo a proporção. */
             display: block;
             margin-left: 50px;
             padding: 0;
         }
+
         .container {
             max-width: 1100px;
             margin: 2rem auto;
@@ -211,7 +214,8 @@
             padding: 2px 6px;
             margin-left: 6px;
             border-radius: 12px;
-            background: #ffc107;   /* amarelinho padrão; mude se quiser */
+            background: #ffc107;
+            /* amarelinho padrão; mude se quiser */
             color: #222;
             font-size: 0.8rem;
             font-weight: 700;
@@ -259,34 +263,42 @@
             font-size: 1.2rem;
         }
 
-       .card-actions{
-        display:flex;
-        gap:.5rem;
-        margin-top:.75rem;
+        .card-actions {
+            display: flex;
+            gap: .5rem;
+            margin-top: .75rem;
         }
 
-        .buy-inline{
-        padding:.6rem .9rem;
-        border:none; border-radius:10px;
-        background: var(--primary-color);
-        color:#ffffff; font-weight:700;
-        cursor:pointer; transition:background .2s;
+        .buy-inline {
+            padding: .6rem .9rem;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary-color);
+            color: #ffffff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .2s;
         }
-        .buy-inline:hover{ background: var(--primary-hover); }
 
-        .details-btn{
-        display:inline-block;
-        padding:.6rem .9rem;
-        border-radius:10px;
-        border:1px solid var(--border-color);
-        background:#f5bc20;
-        color: var(--text-dark);
-        text-decoration:none;
-        font-weight:700;
-        transition: background .2s, border-color .2s;
+        .buy-inline:hover {
+            background: var(--primary-hover);
         }
-        .details-btn:hover{
-        background:#dfa70e; border-color:#cfd6e4;
+
+        .details-btn {
+            display: inline-block;
+            padding: .6rem .9rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: #f5bc20;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 700;
+            transition: background .2s, border-color .2s;
+        }
+
+        .details-btn:hover {
+            background: #dfa70e;
+            border-color: #cfd6e4;
         }
 
 
@@ -318,37 +330,43 @@
 
 <body>
 
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #053669; color: white; font-family: Arial, sans-serif;">
-  <div>
-    <a href="/" style="display: inline-block;">
-      <img class="header-logo" src="/images/logo.png" alt="Logo Tenguam Shop">
-    </a>
-  </div>
+    <header
+        style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background-color: #053669; color: white; font-family: Arial, sans-serif;">
+        <div>
+            <a href="/" style="display: inline-block;">
+                <img class="header-logo" src="/images/logo.png" alt="Logo Tenguam Shop">
+            </a>
+        </div>
 
-   <nav style="display:flex; align-items:center; gap:15px;">
-  <!-- Quando NÃO logado -->
-  <span th:if="${session.clienteEmail == null}">
-    <a href="/cliente/auth?tab=login"   style="color:white; text-decoration:none; margin-right:15px;">Login</a>
-    <a href="/cliente/auth?tab=cadastro" style="color:white; text-decoration:none; margin-right:15px;">Cadastro</a>
-  </span>
+        <nav style="display:flex; align-items:center; gap:15px;">
+            <!-- Quando NÃO logado -->
+            <span th:if="${session.clienteEmail == null}">
+                <a href="/cliente/auth?tab=login"
+                    style="color:white; text-decoration:none; margin-right:15px;">Login</a>
+                <a href="/cliente/auth?tab=cadastro"
+                    style="color:white; text-decoration:none; margin-right:15px;">Cadastro</a>
+            </span>
 
-  <!-- Quando logado -->
-  <span th:if="${session.clienteEmail != null}" style="display:flex; align-items:center; gap:10px;">
-    <!-- “Minha conta” pode apontar para uma rota sua (placeholder abaixo) -->
-    <a href="/" style="color:white; text-decoration:none;">
-      <span th:text="${session.clienteEmail}">email@cliente</span>
-    </a>
-    <span style="opacity:.6;">|</span>
-    <a href="/cliente/logout" style="color:white; text-decoration:none;">Sair</a>
-  </span>
+            <!-- Quando logado -->
+            <span th:if="${session.clienteEmail != null}" style="display:flex; align-items:center; gap:10px;">
+                <!-- “Minha conta” pode apontar para uma rota sua (placeholder abaixo) -->
+                <a href="/" style="color:white; text-decoration:none;">
+                    <span th:text="${session.clienteEmail}">email@cliente</span>
+                </a>
+                <span style="opacity:.6;">|</span>
+                <a href="/cliente/logout" onclick="return confirmarSaida()" style="color:white; text-decoration:none;">
+                    Sair
+                </a>
+            </span>
 
-  <!-- Carrinho permanece para todos -->
-  <a href="/carrinho" title="Ver Carrinho" style="color:white; text-decoration:none; font-size:1.5rem; margin-left:auto;">
-    🛒 <span id="cart-count" class="badge"></span>
-  </a>
-</nav>
+            <!-- Carrinho permanece para todos -->
+            <a href="/carrinho" title="Ver Carrinho"
+                style="color:white; text-decoration:none; font-size:1.5rem; margin-left:auto;">
+                🛒 <span id="cart-count" class="badge"></span>
+            </a>
+        </nav>
 
-</header>
+    </header>
 
     <div class="container">
         <h1>🛒 Produtos em Destaque</h1>
@@ -360,40 +378,34 @@
         </form>
 
         <div th:if="${produtos != null and !produtos.isEmpty()}" class="grid">
-           <div th:each="produto : ${produtos}" class="card">
-            <!-- <a th:href="@{/produto/detalhes(id=${produto.id})}">  <--Vai para página de detalhes -->
+            <div th:each="produto : ${produtos}" class="card">
+                <!-- <a th:href="@{/produto/detalhes(id=${produto.id})}">  <--Vai para página de detalhes -->
                 <!-- IMAGEM: principal -> primeira -> placeholder -->
                 <div th:if="${produto.imagens != null and !produto.imagens.isEmpty()}">
-                <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) > 0}"
-                    th:src="${(produto.imagens.?[imagemPadrao])[0].caminhoImagem}"
-                    alt="Imagem do produto" />
-                <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) == 0}"
-                    th:src="${produto.imagens[0].caminhoImagem}"
-                    alt="Imagem do produto" />
+                    <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) > 0}"
+                        th:src="${(produto.imagens.?[imagemPadrao])[0].caminhoImagem}" alt="Imagem do produto" />
+                    <img th:if="${#lists.size(produto.imagens.?[imagemPadrao]) == 0}"
+                        th:src="${produto.imagens[0].caminhoImagem}" alt="Imagem do produto" />
                 </div>
-                    <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
-                        style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
+                <div th:if="${produto.imagens == null or produto.imagens.isEmpty()}"
+                    style="height:120px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#999; font-size:3rem;">
                     📷
-                    </div>
+                </div>
 
-                    <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
-                    <div class="product-price"
-                        th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
-            </a>
+                <div class="product-name" th:text="${produto.nome}">Nome Produto</div>
+                <div class="product-price"
+                    th:text="'R$ ' + ${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+                </a>
 
                 <!-- AÇÕES: Comprar (fica na página) + Detalhes (vai para detalhesProduto.html) -->
                 <div class="card-actions">
-                    <button
-                    type="button"
-                    class="buy-inline"
-                    data-add-index
-                    th:attr="data-id=${produto.id}, data-nome=${produto.nome}, data-preco=${produto.preco}">
-                    🛒 Comprar
+                    <button type="button" class="buy-inline" data-add-index
+                        th:attr="data-id=${produto.id}, data-nome=${produto.nome}, data-preco=${produto.preco}">
+                        🛒 Comprar
                     </button>
 
-                    <a class="details-btn"
-                    th:href="@{/produto/detalhes(id=${produto.id})}">
-                    Detalhes
+                    <a class="details-btn" th:href="@{/produto/detalhes(id=${produto.id})}">
+                        Detalhes
                     </a>
                 </div>
             </div>
@@ -423,97 +435,111 @@
     <script>
         // --- FUNÇÕES DO CARRINHO ---
 
-    // Pega a quantidade total de itens no carrinho no localStorage
-    function getCartCount() {
-        try {
-            const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
-            return carrinho.reduce((acc, it) => acc + Number(it.quantidade ?? 0), 0);
-        } catch (e) {
-            return 0;
+        // Pega a quantidade total de itens no carrinho no localStorage
+        function getCartCount() {
+            try {
+                const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+                return carrinho.reduce((acc, it) => acc + Number(it.quantidade ?? 0), 0);
+            } catch (e) {
+                return 0;
+            }
         }
-    }
 
-    // Atualiza o número no ícone do carrinho no header
-    function renderCartCount() {
-        const el = document.getElementById('cart-count');
-        if (!el) return;
-        const n = getCartCount();
-        el.textContent = n > 0 ? n : '';
-    }
-
-    // Pega o caminho da imagem do card que foi clicado
-    function getCardImageSrc(btn) {
-        const card = btn.closest('.card');
-        const img = card ? card.querySelector('img') : null;
-        return img ? img.getAttribute('src') : '';
-    }
-
-    // Adiciona um item no localStorage
-    function addItemLocalStorage(item) {
-        const KEY = 'carrinho';
-        const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
-        const idx = carrinho.findIndex(p => p.id === item.id);
-        if (idx >= 0) {
-            carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? 0) || 0) + 1;
-        } else {
-            carrinho.push({ ...item, quantidade: 1 });
+        // Atualiza o número no ícone do carrinho no header
+        function renderCartCount() {
+            const el = document.getElementById('cart-count');
+            if (!el) return;
+            const n = getCartCount();
+            el.textContent = n > 0 ? n : '';
         }
-        localStorage.setItem(KEY, JSON.stringify(carrinho));
-    }
 
-    // Mostra uma mensagem de confirmação rápida
-    function showToast(msg = 'Produto adicionado ao carrinho!') {
-        let t = document.getElementById('toast');
-        if (!t) {
-            t = document.createElement('div');
-            t.id = 'toast';
-            // (Estilos do toast)
-            t.style.position = 'fixed'; t.style.bottom = '20px'; t.style.right = '20px';
-            t.style.padding = '12px 18px'; t.style.background = '#28a745'; t.style.color = '#fff';
-            t.style.borderRadius = '10px'; t.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
-            t.style.transition = 'opacity .3s, transform .3s'; t.style.zIndex = '9999';
-            t.style.transform = 'translateY(20px)'; t.style.opacity = '0';
-            document.body.appendChild(t);
+        // Pega o caminho da imagem do card que foi clicado
+        function getCardImageSrc(btn) {
+            const card = btn.closest('.card');
+            const img = card ? card.querySelector('img') : null;
+            return img ? img.getAttribute('src') : '';
         }
-        t.textContent = msg;
-        setTimeout(() => { // Efeito de aparecer
-            t.style.transform = 'translateY(0)';
-            t.style.opacity = '1';
-        }, 10);
-        setTimeout(() => { // Efeito de desaparecer
-            t.style.opacity = '0';
-            t.style.transform = 'translateY(20px)';
-        }, 2000); // A mensagem some depois de 2 segundos
-    }
+
+        // Adiciona um item no localStorage
+        function addItemLocalStorage(item) {
+            const KEY = 'carrinho';
+            const carrinho = JSON.parse(localStorage.getItem(KEY) || '[]');
+            const idx = carrinho.findIndex(p => p.id === item.id);
+            if (idx >= 0) {
+                carrinho[idx].quantidade = (Number(carrinho[idx].quantidade ?? 0) || 0) + 1;
+            } else {
+                carrinho.push({ ...item, quantidade: 1 });
+            }
+            localStorage.setItem(KEY, JSON.stringify(carrinho));
+        }
+
+        // Mostra uma mensagem de confirmação rápida
+        function showToast(msg = 'Produto adicionado ao carrinho!') {
+            let t = document.getElementById('toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast';
+                // (Estilos do toast)
+                t.style.position = 'fixed'; t.style.bottom = '20px'; t.style.right = '20px';
+                t.style.padding = '12px 18px'; t.style.background = '#28a745'; t.style.color = '#fff';
+                t.style.borderRadius = '10px'; t.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
+                t.style.transition = 'opacity .3s, transform .3s'; t.style.zIndex = '9999';
+                t.style.transform = 'translateY(20px)'; t.style.opacity = '0';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            setTimeout(() => { // Efeito de aparecer
+                t.style.transform = 'translateY(0)';
+                t.style.opacity = '1';
+            }, 10);
+            setTimeout(() => { // Efeito de desaparecer
+                t.style.opacity = '0';
+                t.style.transform = 'translateY(20px)';
+            }, 2000); // A mensagem some depois de 2 segundos
+        }
 
 
-    // --- EVENTOS ---
+        // --- EVENTOS ---
 
-    // Atualiza o contador do carrinho assim que a página carrega
-    document.addEventListener('DOMContentLoaded', renderCartCount);
+        // Atualiza o contador do carrinho assim que a página carrega
+        document.addEventListener('DOMContentLoaded', renderCartCount);
 
-    // Captura os cliques nos botões "Comprar" da página
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('[data-add-index]');
-        if (!btn) return;
+        // Captura os cliques nos botões "Comprar" da página
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-add-index]');
+            if (!btn) return;
 
-        // Impede que o clique no botão acione o link do card
-        e.preventDefault();
-        e.stopPropagation();
+            // Impede que o clique no botão acione o link do card
+            e.preventDefault();
+            e.stopPropagation();
 
-        const id = parseInt(btn.dataset.id, 10);
-        const nome = btn.dataset.nome || 'Produto';
-        const preco = parseFloat(btn.dataset.preco || 0);
-        const imagem = getCardImageSrc(btn);
+            const id = parseInt(btn.dataset.id, 10);
+            const nome = btn.dataset.nome || 'Produto';
+            const preco = parseFloat(btn.dataset.preco || 0);
+            const imagem = getCardImageSrc(btn);
 
-        addItemLocalStorage({ id, nome, preco, imagem });
-        renderCartCount();
-        showToast();
+            addItemLocalStorage({ id, nome, preco, imagem });
+            renderCartCount();
+            showToast();
 
-        // DECISÃO: Redirecionar ou não?
-        // Se quisermos redirecionar para o carrinho, adicionamos a linha abaixo:
-        window.location.href = '/carrinho';
-    });
+            // DECISÃO: Redirecionar ou não?
+            // Se quisermos redirecionar para o carrinho, adicionamos a linha abaixo:
+            window.location.href = '/carrinho';
+        });
+
+
+        //Limpa carrinho
+        function confirmarSaida() {
+            if (confirm('Você está saindo da sua conta. Deseja continuar?')) {
+                // limpa carrinho localStorage
+                localStorage.removeItem('cart');
+                localStorage.removeItem('cartCount');
+                // se tiver outras chaves de carrinho, apague também
+                localStorage.clear(); // (opcional: limpa tudo)
+                return true; // prossegue para /cliente/logout
+            }
+            return false; // cancela logout
+        }
     </script>
 
 </body>

@@ -6,12 +6,13 @@ import com.pi.projeto_quarto_semestre.model.Endereco.Tipo;
 import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
 import com.pi.projeto_quarto_semestre.service.ClienteService;
 
-
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/cliente")
@@ -35,9 +36,8 @@ public class ClienteController {
             @RequestParam(value = "tab", required = false, defaultValue = "login") String tab,
             Model model) {
         model.addAttribute("tab", tab);
-        return "cliente-auth"; // <-- AGORA sem o "cliente/" antes
+        return "cliente-auth"; // template em src/main/resources/templates/cliente-auth.html
     }
-
 
     // POST: cadastro
     @PostMapping("/cadastrar")
@@ -134,29 +134,38 @@ public class ClienteController {
         }
     }
 
-    // POST: login de cliente simples (se não estiver usando Spring Security para isso)
+    // LOGIN (POST) — forma imperativa (evita erro de inferência de tipos no .map)
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String senha,
                         HttpSession session) {
-        return clienteRepository.findByEmailIgnoreCase(email)
-                .map(c -> {
-                    if (passwordEncoder.matches(senha, c.getSenhaHash())) {
-                        session.setAttribute("clienteId", c.getId());
-                        session.setAttribute("clienteEmail", c.getEmail());
-                        return "redirect:/"; // ou /minha-conta
-                    }
-                    return "redirect:/cliente/auth?tab=login&erro=" + url("Credenciais inválidas.");
-                })
-                .orElse("redirect:/cliente/auth?tab=login&erro=" + url("Credenciais inválidas."));
+
+        Optional<Cliente> clienteOpt = clienteRepository.findByEmailIgnoreCase(email);
+        if (clienteOpt.isEmpty()) {
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Credenciais inválidas.");
+        }
+
+        Cliente c = clienteOpt.get();
+        if (!passwordEncoder.matches(senha, c.getSenhaHash())) {
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Credenciais inválidas.");
+        }
+
+        // sucesso
+        session.setAttribute("clienteId", c.getId());
+        session.setAttribute("clienteEmail", c.getEmail());
+        return "redirect:/";
     }
 
+    // LOGOUT (GET) — opção rápida com alerta
     @GetMapping("/logout")
     public String logout(HttpSession session) {
+        session.removeAttribute("clienteId");
+        session.removeAttribute("clienteEmail");
         session.invalidate();
         return "redirect:/";
     }
 
+    // helper para URL-encode das mensagens
     private String url(String s) {
         return java.net.URLEncoder.encode(s, java.nio.charset.StandardCharsets.UTF_8);
     }
