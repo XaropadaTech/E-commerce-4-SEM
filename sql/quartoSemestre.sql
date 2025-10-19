@@ -39,6 +39,39 @@ CREATE TABLE IF NOT EXISTS produto_imagem (
   FOREIGN KEY (produto_id) REFERENCES produto(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Tabela CLIENTE
+CREATE TABLE IF NOT EXISTS cliente (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  nome_completo VARCHAR(120) NOT NULL,
+  email VARCHAR(120) NOT NULL,
+  cpf VARCHAR(14) NOT NULL,
+  data_nascimento DATE NOT NULL,
+  genero VARCHAR(30) NOT NULL,
+  senha_hash VARCHAR(100) NOT NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT uk_cliente_email UNIQUE (email),
+  CONSTRAINT uk_cliente_cpf UNIQUE (cpf)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tabela ENDERECO
+CREATE TABLE IF NOT EXISTS endereco (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  cliente_id BIGINT NOT NULL,
+  tipo VARCHAR(15) NOT NULL,         -- 'FATURAMENTO' ou 'ENTREGA'
+  cep VARCHAR(8) NOT NULL,           -- apenas dígitos
+  logradouro VARCHAR(120) NOT NULL,
+  numero VARCHAR(10) NOT NULL,
+  complemento VARCHAR(60) NULL,
+  bairro VARCHAR(60) NOT NULL,
+  cidade VARCHAR(60) NOT NULL,
+  uf CHAR(2) NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_endereco_cliente (cliente_id),
+  CONSTRAINT fk_endereco_cliente
+    FOREIGN KEY (cliente_id) REFERENCES cliente(id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
+);
+
 
 
 -- Insere dados de exemplo

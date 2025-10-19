@@ -325,13 +325,29 @@
     </a>
   </div>
 
-    <nav style="display: flex; align-items: center;">
-        <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Login</a>
-        <a href="/" style="color: white; text-decoration: none; margin-right: 15px;">Cadastro</a>
-        <a href="/carrinho" title="Ver Carrinho" style="color: white; text-decoration: none; font-size: 1.5rem;">
-        🛒 <span id="cart-count" class="badge"></span>
-        </a>  
-    </nav>
+   <nav style="display:flex; align-items:center; gap:15px;">
+  <!-- Quando NÃO logado -->
+  <span th:if="${session.clienteEmail == null}">
+    <a href="/cliente/auth?tab=login"   style="color:white; text-decoration:none; margin-right:15px;">Login</a>
+    <a href="/cliente/auth?tab=cadastro" style="color:white; text-decoration:none; margin-right:15px;">Cadastro</a>
+  </span>
+
+  <!-- Quando logado -->
+  <span th:if="${session.clienteEmail != null}" style="display:flex; align-items:center; gap:10px;">
+    <!-- “Minha conta” pode apontar para uma rota sua (placeholder abaixo) -->
+    <a href="/" style="color:white; text-decoration:none;">
+      <span th:text="${session.clienteEmail}">email@cliente</span>
+    </a>
+    <span style="opacity:.6;">|</span>
+    <a href="/cliente/logout" style="color:white; text-decoration:none;">Sair</a>
+  </span>
+
+  <!-- Carrinho permanece para todos -->
+  <a href="/carrinho" title="Ver Carrinho" style="color:white; text-decoration:none; font-size:1.5rem; margin-left:auto;">
+    🛒 <span id="cart-count" class="badge"></span>
+  </a>
+</nav>
+
 </header>
 
     <div class="container">
