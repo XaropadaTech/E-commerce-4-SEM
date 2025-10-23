@@ -1,11 +1,12 @@
 package com.pi.projeto_quarto_semestre.service;
 
+import com.pi.projeto_quarto_semestre.integration.ViaCepClient;
 import com.pi.projeto_quarto_semestre.model.Cliente;
 import com.pi.projeto_quarto_semestre.model.Endereco;
 import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
-import com.pi.projeto_quarto_semestre.integration.ViaCepClient;
 import com.pi.projeto_quarto_semestre.util.CpfUtils;
 import com.pi.projeto_quarto_semestre.util.NomeUtils;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
-    private final PasswordEncoder passwordEncoder; // usa o que JÁ existe
+    private final PasswordEncoder passwordEncoder;
     private final ViaCepClient viaCepClient;
 
     public ClienteService(ClienteRepository clienteRepository,
-                          PasswordEncoder passwordEncoder,
-                          ViaCepClient viaCepClient) {
+            PasswordEncoder passwordEncoder,
+            ViaCepClient viaCepClient) {
         this.clienteRepository = clienteRepository;
         this.passwordEncoder = passwordEncoder;
         this.viaCepClient = viaCepClient;
@@ -27,7 +28,7 @@ public class ClienteService {
 
     @Transactional
     public Cliente cadastrarNovo(Cliente cliente) {
-        // 1) normalizar e validar CPF
+        // 1) Normalizar e validar CPF
         String cpf = CpfUtils.somenteDigitos(cliente.getCpf());
         if (!CpfUtils.isValido(cpf)) {
             throw new IllegalArgumentException("CPF inválido.");
@@ -37,51 +38,62 @@ public class ClienteService {
         }
         cliente.setCpf(cpf);
 
-        // 2) validar e-mail único
+        // 2) Validar e-mail único
         if (clienteRepository.existsByEmailIgnoreCase(cliente.getEmail())) {
             throw new IllegalArgumentException("Já existe um cliente com esse e-mail.");
         }
 
-        // 3) validar nome
+        // 3) Validar nome completo
         if (!NomeUtils.nomeValido(cliente.getNomeCompleto())) {
-            throw new IllegalArgumentException("Nome deve ter pelo menos duas palavras, com 3+ letras cada.");
+            throw new IllegalArgumentException("Nome deve conter ao menos duas palavras com 3+ letras cada.");
         }
 
-        // 4) validar endereços:
-        //    - deve haver 1 FATURAMENTO obrigatório completo
-        //    - deve haver pelo menos 1 ENTREGA (pode ser cópia)
+        // 4) Validar endereços
         boolean temFaturamento = false;
         boolean temEntrega = false;
 
-        for (Endereco e : cliente.getEnderecos()) {
-            // CEP deve ser válido via ViaCEP
-            String cep = e.getCep().replaceAll("\\D", "");
-            if (cep.length() != 8 || !viaCepClient.cepValido(cep)) {
-                throw new IllegalArgumentException("CEP inválido para o endereço: " + e.getTipo());
-            }
-            e.setCep(cep);
+        for (Endereco endereco : cliente.getEnderecos()) {
+            // Normalizar CEP (apenas números)
+            String cep = endereco.getCep().replaceAll("\\D", "");
+            endereco.setCep(cep);
 
-            if (e.getLogradouro() == null || e.getLogradouro().isBlank()
-             || e.getNumero() == null || e.getNumero().isBlank()
-             || e.getBairro() == null || e.getBairro().isBlank()
-             || e.getCidade() == null || e.getCidade().isBlank()
-             || e.getUf() == null || e.getUf().isBlank()) {
-                throw new IllegalArgumentException("Endereço incompleto (" + e.getTipo() + ").");
+            boolean cepEhValido = cep.length() == 8 && viaCepClient.cepValido(cep);
+            System.out.println("Validando CEP: " + cep + " -> " + cepEhValido);
+            if (!cepEhValido) {
+                throw new IllegalArgumentException("CEP inválido no endereço de " + endereco.getTipo());
             }
 
-            switch (e.getTipo()) {
+            // Validar campos obrigatórios do endereço
+            if (isVazio(endereco.getLogradouro()) ||
+                    isVazio(endereco.getNumero()) ||
+                    isVazio(endereco.getBairro()) ||
+                    isVazio(endereco.getCidade()) ||
+                    isVazio(endereco.getUf())) {
+                throw new IllegalArgumentException("Endereço incompleto (" + endereco.getTipo() + ").");
+            }
+
+            // Verificar tipo de endereço
+            switch (endereco.getTipo()) {
                 case FATURAMENTO -> temFaturamento = true;
                 case ENTREGA -> temEntrega = true;
             }
         }
 
-        if (!temFaturamento) throw new IllegalArgumentException("Endereço de faturamento é obrigatório.");
-        if (!temEntrega) throw new IllegalArgumentException("Pelo menos um endereço de entrega é obrigatório.");
+        if (!temFaturamento) {
+            throw new IllegalArgumentException("É obrigatório um endereço de FATURAMENTO.");
+        }
+        if (!temEntrega) {
+            throw new IllegalArgumentException("Pelo menos um endereço de ENTREGA é obrigatório.");
+        }
 
-        // 5) encriptar senha com o PasswordEncoder JÁ configurado
+        // 5) Encriptar senha
         cliente.setSenhaHash(passwordEncoder.encode(cliente.getSenhaHash()));
 
-        // 6) persistir (cascade salva endereços)
+        // 6) Persistir cliente (endereços devem ser salvos via cascade)
         return clienteRepository.save(cliente);
+    }
+
+    private boolean isVazio(String valor) {
+        return valor == null || valor.isBlank();
     }
 }

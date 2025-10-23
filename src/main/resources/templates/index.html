@@ -350,7 +350,7 @@
             <!-- Quando logado -->
             <span th:if="${session.clienteEmail != null}" style="display:flex; align-items:center; gap:10px;">
                 <!-- “Minha conta” pode apontar para uma rota sua (placeholder abaixo) -->
-                <a href="/" style="color:white; text-decoration:none;">
+                <a href="cliente/perfilCliente" style="color:white; text-decoration:none;">
                     <span th:text="${session.clienteEmail}">email@cliente</span>
                 </a>
                 <span style="opacity:.6;">|</span>

@@ -1,28 +1,35 @@
 package com.pi.projeto_quarto_semestre.integration;
 
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
 @Component
 public class ViaCepClient {
 
-    private final RestClient rest = RestClient.create(); // Spring 6+. Se estiver em Spring <6, use RestTemplate.
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public Map<String, Object> buscar(String cepSomenteDigitos) {
-        // Ex: https://viacep.com.br/ws/09760280/json/
         String url = "https://viacep.com.br/ws/" + cepSomenteDigitos + "/json/";
-        return rest.get().uri(url).retrieve().body(Map.class);
+        return restTemplate.getForObject(url, Map.class);
     }
 
     public boolean cepValido(String cepSomenteDigitos) {
         try {
             Map<String, Object> resp = buscar(cepSomenteDigitos);
-            if (resp == null) return false;
+            System.out.println("Resposta do ViaCEP: " + resp);
+
+            if (resp == null || resp.isEmpty()) return false;
+
             Object erro = resp.get("erro");
-            return !(erro instanceof Boolean && (Boolean) erro);
+            if (erro instanceof Boolean && (Boolean) erro) {
+                return false;
+            }
+
+            return resp.containsKey("logradouro") && resp.containsKey("localidade");
         } catch (Exception e) {
+            System.out.println("Erro ao validar CEP: " + e.getMessage());
             return false;
         }
     }

@@ -7,6 +7,8 @@ import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
 import com.pi.projeto_quarto_semestre.service.ClienteService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -168,5 +170,68 @@ public class ClienteController {
     // helper para URL-encode das mensagens
     private String url(String s) {
         return java.net.URLEncoder.encode(s, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+   @GetMapping("/perfilCliente")
+public String perfilCliente(HttpSession session, Model model) {
+    Long clienteId = (Long) session.getAttribute("clienteId");
+
+    if (clienteId == null) {
+        return "redirect:/cliente/auth?tab=login&erro=" + url("Faça login para acessar o perfil.");
+    }
+
+    Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
+    if (clienteOpt.isEmpty()) {
+        session.invalidate();
+        return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada. Faça login novamente.");
+    }
+
+    Cliente cliente = clienteOpt.get();
+    model.addAttribute("cliente", cliente);
+    return "perfilCliente";  // <---- remover a barra inicial
+}
+
+    @PostMapping("/perfil/salvar")
+    @Transactional
+    public String salvarPerfil(@ModelAttribute Cliente clienteForm,
+                               HttpSession session) {
+
+        Long clienteId = (Long) session.getAttribute("clienteId");
+        if (clienteId == null) {
+            return "redirect:/auth?tab=login&erro=" + url("Sessão expirada.");
+        }
+
+        Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
+        if (clienteOpt.isEmpty()) {
+            return "redirect:/auth?tab=login&erro=" + url("Cliente não encontrado.");
+        }
+
+        Cliente cliente = clienteOpt.get();
+
+        // Atualiza campos editáveis
+        cliente.setNomeCompleto(clienteForm.getNomeCompleto());
+        cliente.setEmail(clienteForm.getEmail());
+        cliente.setDataNascimento(clienteForm.getDataNascimento());
+        cliente.setGenero(clienteForm.getGenero());
+        cliente.setCpf(clienteForm.getCpf());
+
+        // Senha: só atualiza se foi informada
+        if (clienteForm.getSenhaHash() != null && !clienteForm.getSenhaHash().isBlank()) {
+            cliente.setSenhaHash(passwordEncoder.encode(clienteForm.getSenhaHash()));
+        }
+
+        // Atualiza endereços
+        cliente.getEnderecos().clear();
+        if (clienteForm.getEnderecos() != null) {
+            for (Endereco e : clienteForm.getEnderecos()) {
+                e.setCliente(cliente);
+                cliente.getEnderecos().add(e);
+            }
+        }
+
+        clienteRepository.save(cliente);
+        session.setAttribute("clienteEmail", cliente.getEmail());
+
+        return "redirect:/cliente/perfilCliente?ok=" + url("Perfil atualizado com sucesso!");
     }
 }
