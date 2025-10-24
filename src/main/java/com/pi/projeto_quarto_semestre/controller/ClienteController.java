@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.transaction.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-import com.pi.projeto_quarto_semestre.repository.EnderecoRepository;
+
+import com.pi.projeto_quarto_semestre.repository.*;
 
 import java.util.Optional;
 
@@ -34,8 +34,8 @@ public class ClienteController {
     private final PasswordEncoder passwordEncoder;
 
     public ClienteController(ClienteService clienteService,
-                             ClienteRepository clienteRepository,
-                             PasswordEncoder passwordEncoder) {
+            ClienteRepository clienteRepository,
+            PasswordEncoder passwordEncoder) {
         this.clienteService = clienteService;
         this.clienteRepository = clienteRepository;
         this.passwordEncoder = passwordEncoder;
@@ -57,13 +57,13 @@ public class ClienteController {
             @RequestParam String email,
             @RequestParam String cpf,
             @RequestParam String dataNascimento, // yyyy-MM-dd
-            @RequestParam String genero,         // MASCULINO | FEMININO | OUTRO | PREFIRO_NAO_INFORMAR
+            @RequestParam String genero, // MASCULINO | FEMININO | OUTRO | PREFIRO_NAO_INFORMAR
             @RequestParam String senha,
             // faturamento
             @RequestParam String fatCep,
             @RequestParam String fatLogradouro,
             @RequestParam String fatNumero,
-            @RequestParam(required=false) String fatComplemento,
+            @RequestParam(required = false) String fatComplemento,
             @RequestParam String fatBairro,
             @RequestParam String fatCidade,
             @RequestParam String fatUf,
@@ -71,19 +71,18 @@ public class ClienteController {
             @RequestParam String ent1Cep,
             @RequestParam String ent1Logradouro,
             @RequestParam String ent1Numero,
-            @RequestParam(required=false) String ent1Complemento,
+            @RequestParam(required = false) String ent1Complemento,
             @RequestParam String ent1Bairro,
             @RequestParam String ent1Cidade,
             @RequestParam String ent1Uf,
             // entrega extras (opcional, virão como arrays JS)
-            @RequestParam(required=false, name="entCep[]") String[] entCep,
-            @RequestParam(required=false, name="entLogradouro[]") String[] entLogradouro,
-            @RequestParam(required=false, name="entNumero[]") String[] entNumero,
-            @RequestParam(required=false, name="entComplemento[]") String[] entComplemento,
-            @RequestParam(required=false, name="entBairro[]") String[] entBairro,
-            @RequestParam(required=false, name="entCidade[]") String[] entCidade,
-            @RequestParam(required=false, name="entUf[]") String[] entUf
-    ) {
+            @RequestParam(required = false, name = "entCep[]") String[] entCep,
+            @RequestParam(required = false, name = "entLogradouro[]") String[] entLogradouro,
+            @RequestParam(required = false, name = "entNumero[]") String[] entNumero,
+            @RequestParam(required = false, name = "entComplemento[]") String[] entComplemento,
+            @RequestParam(required = false, name = "entBairro[]") String[] entBairro,
+            @RequestParam(required = false, name = "entCidade[]") String[] entCidade,
+            @RequestParam(required = false, name = "entUf[]") String[] entUf) {
         try {
             Cliente c = new Cliente();
             c.setNomeCompleto(nomeCompleto);
@@ -148,8 +147,8 @@ public class ClienteController {
     // LOGIN (POST) — forma imperativa (evita erro de inferência de tipos no .map)
     @PostMapping("/login")
     public String login(@RequestParam String email,
-                        @RequestParam String senha,
-                        HttpSession session) {
+            @RequestParam String senha,
+            HttpSession session) {
 
         Optional<Cliente> clienteOpt = clienteRepository.findByEmailIgnoreCase(email);
         if (clienteOpt.isEmpty()) {
@@ -181,29 +180,29 @@ public class ClienteController {
         return java.net.URLEncoder.encode(s, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-   @GetMapping("/perfilCliente")
-public String perfilCliente(HttpSession session, Model model) {
-    Long clienteId = (Long) session.getAttribute("clienteId");
+    @GetMapping("/perfilCliente")
+    public String perfilCliente(HttpSession session, Model model) {
+        Long clienteId = (Long) session.getAttribute("clienteId");
 
-    if (clienteId == null) {
-        return "redirect:/cliente/auth?tab=login&erro=" + url("Faça login para acessar o perfil.");
+        if (clienteId == null) {
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Faça login para acessar o perfil.");
+        }
+
+        Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
+        if (clienteOpt.isEmpty()) {
+            session.invalidate();
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada. Faça login novamente.");
+        }
+
+        Cliente cliente = clienteOpt.get();
+        model.addAttribute("cliente", cliente);
+        return "perfilCliente"; // <---- remover a barra inicial
     }
-
-    Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
-    if (clienteOpt.isEmpty()) {
-        session.invalidate();
-        return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada. Faça login novamente.");
-    }
-
-    Cliente cliente = clienteOpt.get();
-    model.addAttribute("cliente", cliente);
-    return "perfilCliente";  // <---- remover a barra inicial
-}
 
     @PostMapping("/perfil/salvar")
     @Transactional
     public String salvarPerfil(@ModelAttribute Cliente clienteForm,
-                               HttpSession session) {
+            HttpSession session) {
 
         Long clienteId = (Long) session.getAttribute("clienteId");
         if (clienteId == null) {
@@ -219,10 +218,11 @@ public String perfilCliente(HttpSession session, Model model) {
 
         // Atualiza campos editáveis
         cliente.setNomeCompleto(clienteForm.getNomeCompleto());
-        cliente.setEmail(clienteForm.getEmail());
-        cliente.setDataNascimento(clienteForm.getDataNascimento());
         cliente.setGenero(clienteForm.getGenero());
-        cliente.setCpf(clienteForm.getCpf());
+
+        if (clienteForm.getDataNascimento() != null) {
+            cliente.setDataNascimento(clienteForm.getDataNascimento());
+        }
 
         // Senha: só atualiza se foi informada
         if (clienteForm.getSenhaHash() != null && !clienteForm.getSenhaHash().isBlank()) {
@@ -262,7 +262,7 @@ public String perfilCliente(HttpSession session, Model model) {
         }
 
         // 2. Encontrar o NOVO endereço que o usuário quer como padrão
-        //    Usa o EnderecoRepository que criamos
+        // Usa o EnderecoRepository que criamos
         Endereco novoPadrao = enderecoRepository.findById(enderecoId).orElse(null);
 
         // 3. Checagem de segurança: O endereço existe? Ele pertence a este cliente?
@@ -272,11 +272,11 @@ public String perfilCliente(HttpSession session, Model model) {
         }
 
         // 4. Encontrar o endereço padrão ANTIGO (se existir)
-        //    Usa o método customizado que criamos no EnderecoRepository
+        // Usa o método customizado que criamos no EnderecoRepository
         Endereco antigoPadrao = enderecoRepository.findByClienteIdAndPadraoTrue(clienteId);
 
         // 5. Fazer a troca: desmarca o antigo e marca o novo
-        //    Só executa se o antigo padrão for diferente do novo que foi clicado
+        // Só executa se o antigo padrão for diferente do novo que foi clicado
         if (antigoPadrao != null && !antigoPadrao.getId().equals(novoPadrao.getId())) {
             antigoPadrao.setPadrao(false);
             enderecoRepository.save(antigoPadrao); // Salva a alteração no antigo
@@ -307,15 +307,16 @@ public String perfilCliente(HttpSession session, Model model) {
         Endereco enderecoParaRemover = enderecoRepository.findById(enderecoId).orElse(null);
 
         // 3. Checagem de segurança e validação:
-        //    - O endereço existe?
-        //    - Pertence a este cliente?
-        //    - NÃO é o endereço padrão? (Regra de negócio: não permitir remover o padrão)
+        // - O endereço existe?
+        // - Pertence a este cliente?
+        // - NÃO é o endereço padrão? (Regra de negócio: não permitir remover o padrão)
         if (enderecoParaRemover == null || !enderecoParaRemover.getCliente().getId().equals(clienteId)) {
             ra.addFlashAttribute("erro", "Endereço inválido ou não pertence a você.");
             return "redirect:/cliente/perfilCliente";
         }
         if (Boolean.TRUE.equals(enderecoParaRemover.getPadrao())) {
-            ra.addFlashAttribute("erro", "Não é possível remover o endereço padrão. Defina outro como padrão primeiro.");
+            ra.addFlashAttribute("erro",
+                    "Não é possível remover o endereço padrão. Defina outro como padrão primeiro.");
             return "redirect:/cliente/perfilCliente";
         }
 
