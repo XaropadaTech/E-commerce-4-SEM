@@ -3,6 +3,53 @@
 <head>
 
     <script>
+
+        function removerEndereco(button) {
+    // Pega o DIV pai do botão
+    const enderecoDiv = button.parentElement.parentElement; // Ajuste se a estrutura for diferente
+    // Encontra o input hidden com o ID dentro desse DIV
+    const idInput = enderecoDiv.querySelector('input[name$=".id"]');
+    if (!idInput || !idInput.value) {
+        alert('Erro: Não foi possível encontrar o ID do endereço.');
+        return;
+    }
+    const enderecoId = idInput.value;
+
+    // Confirmação com o usuário
+    if (!confirm('Tem certeza que deseja remover este endereço? Esta ação não pode ser desfeita.')) {
+        return;
+    }
+
+    // Monta a URL para o backend
+    const url = `/cliente/perfil/endereco/remover/${enderecoId}`;
+
+    // Usa Fetch para enviar a requisição POST
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            // Adicione headers CSRF se necessário
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // Se o backend confirmou a remoção (redirect é ok),
+            // remove o elemento da tela E recarrega a página
+            // para garantir consistência e mostrar mensagens de sucesso/erro do backend.
+            alert('Endereço removido! Recarregando página...');
+            window.location.reload();
+        } else {
+            // Tenta pegar uma mensagem de erro do backend se houver (opcional)
+            response.text().then(text => {
+                 alert('Erro ao remover endereço: ' + (text || response.status));
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+        alert('Erro de rede ao tentar remover endereço.');
+    });
+}
+
         function definirComoPadrao(enderecoId) {
     // Confirmação com o usuário
     if (!confirm('Tem certeza que deseja definir este endereço como padrão?')) {
@@ -286,26 +333,27 @@ a:hover {
                 <input type="hidden" th:name="'enderecos[' + ${iterStat.index} + '].padrao'" th:value="${end.padrao}" />
 
                 <label>CEP:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].cep'" th:value="${end.cep}" required maxlength="8"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].cep'" th:value="${end.cep}" readonly />
                 </label><br>
                 <label>Logradouro:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].logradouro'" th:value="${end.logradouro}" required maxlength="120"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].logradouro'" th:value="${end.logradouro}" readonly />
                 </label><br>
                 <label>Número:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].numero'" th:value="${end.numero}" required maxlength="10"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].numero'" th:value="${end.numero}" readonly />
                 </label><br>
                 <label>Complemento:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].complemento'" th:value="${end.complemento}" maxlength="60"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].complemento'" th:value="${end.complemento}" readonly />
                 </label><br>
                 <label>Bairro:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].bairro'" th:value="${end.bairro}" required maxlength="60"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].bairro'" th:value="${end.bairro}" readonly />
                 </label><br>
                 <label>Cidade:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].cidade'" th:value="${end.cidade}" required maxlength="60"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].cidade'" th:value="${end.cidade}" readonly />
                 </label><br>
                 <label>UF:
-                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].uf'" th:value="${end.uf}" required maxlength="2"/>
+                    <input type="text" th:name="'enderecos[' + ${iterStat.index} + '].uf'" th:value="${end.uf}" readonly />
                 </label><br>
+
 
                 <button type="button" onclick="removerEndereco(this)">Remover</button>
 

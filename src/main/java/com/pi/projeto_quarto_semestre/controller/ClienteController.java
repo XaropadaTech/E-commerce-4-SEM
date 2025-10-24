@@ -289,4 +289,46 @@ public String perfilCliente(HttpSession session, Model model) {
         ra.addFlashAttribute("ok", "Endereço padrão atualizado com sucesso!"); // Mensagem de sucesso
         return "redirect:/cliente/perfilCliente"; // Redireciona de volta para a pág. de perfil
     }
+
+    @PostMapping("/perfil/endereco/remover/{enderecoId}")
+    @Transactional // Garante que a deleção ocorra corretamente
+    public String removerEndereco(
+            @PathVariable Long enderecoId,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        // 1. Validar a sessão do usuário
+        Long clienteId = (Long) session.getAttribute("clienteId");
+        if (clienteId == null) {
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada.");
+        }
+
+        // 2. Encontrar o endereço que o usuário quer remover
+        Endereco enderecoParaRemover = enderecoRepository.findById(enderecoId).orElse(null);
+
+        // 3. Checagem de segurança e validação:
+        //    - O endereço existe?
+        //    - Pertence a este cliente?
+        //    - NÃO é o endereço padrão? (Regra de negócio: não permitir remover o padrão)
+        if (enderecoParaRemover == null || !enderecoParaRemover.getCliente().getId().equals(clienteId)) {
+            ra.addFlashAttribute("erro", "Endereço inválido ou não pertence a você.");
+            return "redirect:/cliente/perfilCliente";
+        }
+        if (Boolean.TRUE.equals(enderecoParaRemover.getPadrao())) {
+            ra.addFlashAttribute("erro", "Não é possível remover o endereço padrão. Defina outro como padrão primeiro.");
+            return "redirect:/cliente/perfilCliente";
+        }
+
+        // 4. Remover o endereço do banco de dados
+        try {
+            enderecoRepository.delete(enderecoParaRemover);
+            // OU enderecoRepository.deleteById(enderecoId);
+
+            ra.addFlashAttribute("ok", "Endereço removido com sucesso!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("erro", "Erro ao remover o endereço.");
+        }
+
+        return "redirect:/cliente/perfilCliente"; // Redireciona de volta para a pág. de perfil
+    }
 }
