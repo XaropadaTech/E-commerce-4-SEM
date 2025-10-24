@@ -41,6 +41,9 @@ public class Endereco {
     @Column(nullable=false, length=2)
     private String uf;
 
+    @Column(nullable = false) // Garante que o campo sempre terá um valor (não será nulo)
+    private Boolean padrao = false; // Define 'false' como valor inicial padrão
+
         // getters e setters 
 
 
@@ -122,6 +125,14 @@ public class Endereco {
 
     public void setUf(String uf) {
         this.uf = uf;
+    }
+
+    public Boolean getPadrao() {
+        return padrao;
+    }
+
+    public void setPadrao(Boolean padrao) {
+        this.padrao = padrao;
     }
     
 }

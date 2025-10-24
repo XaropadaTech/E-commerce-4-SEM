@@ -9,16 +9,25 @@ import com.pi.projeto_quarto_semestre.service.ClienteService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.transaction.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import com.pi.projeto_quarto_semestre.repository.EnderecoRepository;
 
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/cliente")
 public class ClienteController {
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
     private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
@@ -233,5 +242,51 @@ public String perfilCliente(HttpSession session, Model model) {
         session.setAttribute("clienteEmail", cliente.getEmail());
 
         return "redirect:/cliente/perfilCliente?ok=" + url("Perfil atualizado com sucesso!");
+    }
+
+    // ===================================================================
+    // MÉTODO NOVO PARA O REQUISITO 3: DEFINIR ENDEREÇO PADRÃO
+    // ===================================================================
+    @PostMapping("/perfil/endereco/definir-padrao/{enderecoId}")
+    @Transactional // Garante que as duas atualizações (antigo e novo) ocorram juntas
+    public String definirEnderecoPadrao(
+            @PathVariable Long enderecoId, // Pega o ID da URL
+            HttpSession session,
+            RedirectAttributes ra) { // Para enviar mensagens de sucesso/erro
+
+        // 1. Validar a sessão do usuário
+        Long clienteId = (Long) session.getAttribute("clienteId");
+        if (clienteId == null) {
+            // Usa o helper 'url' que você já tem para codificar a mensagem
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada.");
+        }
+
+        // 2. Encontrar o NOVO endereço que o usuário quer como padrão
+        //    Usa o EnderecoRepository que criamos
+        Endereco novoPadrao = enderecoRepository.findById(enderecoId).orElse(null);
+
+        // 3. Checagem de segurança: O endereço existe? Ele pertence a este cliente?
+        if (novoPadrao == null || !novoPadrao.getCliente().getId().equals(clienteId)) {
+            ra.addFlashAttribute("erro", "Endereço inválido ou não pertence a você.");
+            return "redirect:/cliente/perfilCliente"; // Volta para a página de perfil
+        }
+
+        // 4. Encontrar o endereço padrão ANTIGO (se existir)
+        //    Usa o método customizado que criamos no EnderecoRepository
+        Endereco antigoPadrao = enderecoRepository.findByClienteIdAndPadraoTrue(clienteId);
+
+        // 5. Fazer a troca: desmarca o antigo e marca o novo
+        //    Só executa se o antigo padrão for diferente do novo que foi clicado
+        if (antigoPadrao != null && !antigoPadrao.getId().equals(novoPadrao.getId())) {
+            antigoPadrao.setPadrao(false);
+            enderecoRepository.save(antigoPadrao); // Salva a alteração no antigo
+        }
+
+        // Marca o novo endereço como padrão (mesmo que ele já fosse, garante o estado)
+        novoPadrao.setPadrao(true);
+        enderecoRepository.save(novoPadrao); // Salva a alteração no novo
+
+        ra.addFlashAttribute("ok", "Endereço padrão atualizado com sucesso!"); // Mensagem de sucesso
+        return "redirect:/cliente/perfilCliente"; // Redireciona de volta para a pág. de perfil
     }
 }
