@@ -91,7 +91,7 @@
             const index = container.children.length;
 
             const template = `
-            <div class="endereco-entrega" style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+            <div class="endereco-entrega" style="border:3px solid #ccc; padding:10px; margin-bottom:10px;">
                 <input type="hidden" name="enderecos[${index}].id" value="">
                 <input type="hidden" name="enderecos[${index}].tipo" value="ENTREGA">
 
@@ -251,7 +251,7 @@ label {
 }
 
 input, select {
-    width: 100%;
+    width: 95%;
     padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
@@ -415,27 +415,45 @@ a:hover {
             <div th:if="${end.tipo.name() == 'FATURAMENTO'}">
                 <input type="hidden" th:name="enderecos[0].id" th:value="${end.id}" />
                 <input type="hidden" th:name="enderecos[0].tipo" th:value="${end.tipo}" />
-                <label>CEP:
-                    <input type="text" th:name="enderecos[0].cep" th:value="${end.cep}" required maxlength="9"/>
-                </label><br>
-                <label>Logradouro:
-                    <input type="text" th:name="enderecos[0].logradouro" th:value="${end.logradouro}" required maxlength="120"/>
-                </label><br>
-                <label>Número:
-                    <input type="text" th:name="enderecos[0].numero" th:value="${end.numero}" required maxlength="10"/>
-                </label><br>
-                <label>Complemento:
-                    <input type="text" th:name="enderecos[0].complemento" th:value="${end.complemento}" maxlength="60"/>
-                </label><br>
-                <label>Bairro:
-                    <input type="text" th:name="enderecos[0].bairro" th:value="${end.bairro}" required maxlength="60"/>
-                </label><br>
-                <label>Cidade:
-                    <input type="text" th:name="enderecos[0].cidade" th:value="${end.cidade}" required maxlength="60"/>
-                </label><br>
-                <label>UF:
-                    <input type="text" th:name="enderecos[0].uf" th:value="${end.uf}" required maxlength="2"/>
-                </label><br>
+                 <label>CEP:
+                <input type="text" id="cep-faturamento"
+                       th:name="enderecos[0].cep"
+                       th:value="${end.cep}" readonly />
+            </label>
+
+            <label>Logradouro:
+                <input type="text" id="logradouro-faturamento"
+                       th:name="enderecos[0].logradouro"
+                       th:value="${end.logradouro}" readonly />
+            </label>
+
+            <label>Número:
+                <input type="text" th:name="enderecos[0].numero"
+                       th:value="${end.numero}" readonly />
+            </label>
+
+            <label>Complemento:
+                <input type="text" th:name="enderecos[0].complemento"
+                       th:value="${end.complemento}" readonly />
+            </label>
+
+            <label>Bairro:
+                <input type="text" id="bairro-faturamento"
+                       th:name="enderecos[0].bairro"
+                       th:value="${end.bairro}" readonly />
+            </label>
+
+            <label>Cidade:
+                <input type="text" id="cidade-faturamento"
+                       th:name="enderecos[0].cidade"
+                       th:value="${end.cidade}" readonly />
+            </label>
+
+            <label>UF:
+                <input type="text" id="uf-faturamento"
+                       th:name="enderecos[0].uf"
+                       th:value="${end.uf}" readonly />
+            </label><br>
             </div>
         </div>
     </div>
