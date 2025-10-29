@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 @Entity
 @Table(
     name = "cliente",
@@ -31,6 +33,7 @@ public class Cliente {
     private String cpf; // armazenar só dígitos é melhor (11). Se preferir, normalize.
 
     @Column(nullable=false)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dataNascimento;
 
     @Enumerated(EnumType.STRING)

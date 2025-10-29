@@ -389,8 +389,12 @@ a:hover {
     </label><br>
 
     <label>Data de Nascimento:
-        <input type="date" th:field="*{dataNascimento}" />
-    </label><br>
+        <input type="date"
+            th:field="*{dataNascimento}"
+            required
+            th:attr="max=${#dates.format(#dates.createNow(),'yyyy-MM-dd')},min=1900-01-01" />
+    </label>
+<br>
 
     <label>Gênero:
         <select th:field="*{genero}">

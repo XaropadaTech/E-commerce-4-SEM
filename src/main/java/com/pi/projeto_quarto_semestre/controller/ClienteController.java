@@ -3,7 +3,6 @@ package com.pi.projeto_quarto_semestre.controller;
 import com.pi.projeto_quarto_semestre.model.Cliente;
 import com.pi.projeto_quarto_semestre.model.Endereco;
 import com.pi.projeto_quarto_semestre.model.Endereco.Tipo;
-import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
 import com.pi.projeto_quarto_semestre.service.ClienteService;
 
 import jakarta.servlet.http.HttpSession;
@@ -201,8 +200,7 @@ public class ClienteController {
 
     @PostMapping("/perfil/salvar")
     @Transactional
-    public String salvarPerfil(@ModelAttribute Cliente clienteForm,
-            HttpSession session) {
+    public String salvarPerfil(@ModelAttribute Cliente clienteForm, HttpSession session) {
 
         Long clienteId = (Long) session.getAttribute("clienteId");
         if (clienteId == null) {
@@ -216,11 +214,18 @@ public class ClienteController {
 
         Cliente cliente = clienteOpt.get();
 
-        // Atualiza campos editáveis
+        // ---------------- Dados básicos ----------------
         cliente.setNomeCompleto(clienteForm.getNomeCompleto());
         cliente.setGenero(clienteForm.getGenero());
 
+        // valida e atualiza a data de nascimento
         if (clienteForm.getDataNascimento() != null) {
+            // impede data futura
+            if (clienteForm.getDataNascimento().isAfter(java.time.LocalDate.now())) {
+                return "redirect:/cliente/perfilCliente?erro=" + url("A data de nascimento não pode ser no futuro.");
+            }
+
+            // atualiza o valor
             cliente.setDataNascimento(clienteForm.getDataNascimento());
         }
 
@@ -229,10 +234,18 @@ public class ClienteController {
             cliente.setSenhaHash(passwordEncoder.encode(clienteForm.getSenhaHash()));
         }
 
-        // Atualiza endereços
+        // ---------------- Endereços ----------------
         cliente.getEnderecos().clear();
         if (clienteForm.getEnderecos() != null) {
             for (Endereco e : clienteForm.getEnderecos()) {
+                if (e == null)
+                    continue;
+
+                // remove caracteres não numéricos do CEP
+                if (e.getCep() != null) {
+                    e.setCep(e.getCep().replaceAll("\\D", ""));
+                }
+
                 e.setCliente(cliente);
                 cliente.getEnderecos().add(e);
             }
