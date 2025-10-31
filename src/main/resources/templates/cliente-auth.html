@@ -220,15 +220,21 @@
   <h1>Área do Cliente</h1>
 
   <div class="tabs">
-    <a th:classappend="${tab}=='login' ? 'active'" th:href="@{/cliente/auth(tab='login')}" >Login</a>
-    <a th:classappend="${tab}=='cadastro' ? 'active'" th:href="@{/cliente/auth(tab='cadastro')}">Cadastro</a>
+    <!-- ✅ preserva o 'next' ao trocar de aba -->
+    <a th:classappend="${tab}=='login' ? 'active'"
+       th:href="@{/cliente/auth(tab='login', next=${next})}">Login</a>
+    <a th:classappend="${tab}=='cadastro' ? 'active'"
+       th:href="@{/cliente/auth(tab='cadastro', next=${next})}">Cadastro</a>
   </div>
 
   <p th:if="${param.erro}" class="danger" th:text="${param.erro}"></p>
   <p th:if="${param.ok}" class="success">Cadastro realizado! Faça o login abaixo.</p>
 
+  <!-- ====== ABA LOGIN ====== -->
   <section th:if="${tab}=='login'">
     <form method="post" th:action="@{/cliente/login}">
+      <!-- ✅ preserva o destino para voltar ao checkout após login -->
+      <input type="hidden" name="next" th:value="${next}">
       <div class="row">
         <div class="col-6 form-group">
           <label for="loginEmail">E-mail</label>
@@ -243,8 +249,16 @@
         </div>
       </div>
     </form>
+
+    <!-- ✅ Botão "Cadastre-se" (substitui link), preservando 'next' -->
+    <!-- <form method="get" th:action="@{/cliente/auth}" style="margin-top: 12px;">
+      <input type="hidden" name="tab" value="cadastro">
+      <input type="hidden" name="next" th:value="${next}">
+      <button type="submit" class="btn btn-secondary">Cadastre-se</button>
+    </form> -->
   </section>
 
+  <!-- ====== ABA CADASTRO ====== -->
   <section th:if="${tab}=='cadastro'">
     <form method="post" th:action="@{/cliente/cadastrar}" id="formCadastro">
       <fieldset>
@@ -290,13 +304,34 @@
       <fieldset>
         <legend>Endereço de Faturamento (Obrigatório)</legend>
         <div class="row">
-          <div class="col-3 form-group"><label for="fatCep">CEP</label><input type="text" id="fatCep" name="fatCep" required maxlength="9" class="cep"/></div>
-          <div class="col-6 form-group"><label for="fatLogradouro">Logradouro</label><input type="text" id="fatLogradouro" name="fatLogradouro" required/></div>
-          <div class="col-3 form-group"><label for="fatNumero">Número</label><input type="text" id="fatNumero" name="fatNumero" required/></div>
-          <div class="col-4 form-group"><label for="fatComplemento">Complemento</label><input type="text" id="fatComplemento" name="fatComplemento"/></div>
-          <div class="col-4 form-group"><label for="fatBairro">Bairro</label><input type="text" id="fatBairro" name="fatBairro" required/></div>
-          <div class="col-3 form-group"><label for="fatCidade">Cidade</label><input type="text" id="fatCidade" name="fatCidade" required/></div>
-          <div class="col-1 form-group"><label for="fatUf">UF</label><input type="text" id="fatUf" name="fatUf" required maxlength="2"/></div>
+          <div class="col-3 form-group">
+            <label for="fatCep">CEP</label>
+            <input type="text" id="fatCep" name="fatCep" required maxlength="9" class="cep"/>
+          </div>
+          <div class="col-6 form-group">
+            <label for="fatLogradouro">Logradouro</label>
+            <input type="text" id="fatLogradouro" name="fatLogradouro" required/>
+          </div>
+          <div class="col-3 form-group">
+            <label for="fatNumero">Número</label>
+            <input type="text" id="fatNumero" name="fatNumero" required/>
+          </div>
+          <div class="col-4 form-group">
+            <label for="fatComplemento">Complemento</label>
+            <input type="text" id="fatComplemento" name="fatComplemento"/>
+          </div>
+          <div class="col-4 form-group">
+            <label for="fatBairro">Bairro</label>
+            <input type="text" id="fatBairro" name="fatBairro" required/>
+          </div>
+          <div class="col-3 form-group">
+            <label for="fatCidade">Cidade</label>
+            <input type="text" id="fatCidade" name="fatCidade" required/>
+          </div>
+          <div class="col-1 form-group">
+            <label for="fatUf">UF</label>
+            <input type="text" id="fatUf" name="fatUf" required maxlength="2"/>
+          </div>
           <div class="col-12 form-group">
             <button type="button" id="copiarFatParaEnt" class="btn btn-secondary">Copiar para entrega</button>
           </div>
@@ -308,13 +343,34 @@
 
         <div class="entrega bloco">
           <div class="row">
-            <div class="col-3 form-group"><label for="ent1Cep">CEP</label><input type="text" id="ent1Cep" name="ent1Cep" required maxlength="9" class="cep"/></div>
-            <div class="col-6 form-group"><label for="ent1Logradouro">Logradouro</label><input type="text" id="ent1Logradouro" name="ent1Logradouro" required/></div>
-            <div class="col-3 form-group"><label for="ent1Numero">Número</label><input type="text" id="ent1Numero" name="ent1Numero" required/></div>
-            <div class="col-4 form-group"><label for="ent1Complemento">Complemento</label><input type="text" id="ent1Complemento" name="ent1Complemento"/></div>
-            <div class="col-4 form-group"><label for="ent1Bairro">Bairro</label><input type="text" id="ent1Bairro" name="ent1Bairro" required/></div>
-            <div class="col-3 form-group"><label for="ent1Cidade">Cidade</label><input type="text" id="ent1Cidade" name="ent1Cidade" required/></div>
-            <div class="col-1 form-group"><label for="ent1Uf">UF</label><input type="text" id="ent1Uf" name="ent1Uf" required maxlength="2"/></div>
+            <div class="col-3 form-group">
+              <label for="ent1Cep">CEP</label>
+              <input type="text" id="ent1Cep" name="ent1Cep" required maxlength="9" class="cep"/>
+            </div>
+            <div class="col-6 form-group">
+              <label for="ent1Logradouro">Logradouro</label>
+              <input type="text" id="ent1Logradouro" name="ent1Logradouro" required/>
+            </div>
+            <div class="col-3 form-group">
+              <label for="ent1Numero">Número</label>
+              <input type="text" id="ent1Numero" name="ent1Numero" required/>
+            </div>
+            <div class="col-4 form-group">
+              <label for="ent1Complemento">Complemento</label>
+              <input type="text" id="ent1Complemento" name="ent1Complemento"/>
+            </div>
+            <div class="col-4 form-group">
+              <label for="ent1Bairro">Bairro</label>
+              <input type="text" id="ent1Bairro" name="ent1Bairro" required/>
+            </div>
+            <div class="col-3 form-group">
+              <label for="ent1Cidade">Cidade</label>
+              <input type="text" id="ent1Cidade" name="ent1Cidade" required/>
+            </div>
+            <div class="col-1 form-group">
+              <label for="ent1Uf">UF</label>
+              <input type="text" id="ent1Uf" name="ent1Uf" required maxlength="2"/>
+            </div>
           </div>
         </div>
 
@@ -328,6 +384,7 @@
     </form>
   </section>
 </main>
+
 
 <script th:src="@{/js/cliente-auth.js}"></script>
 </body>

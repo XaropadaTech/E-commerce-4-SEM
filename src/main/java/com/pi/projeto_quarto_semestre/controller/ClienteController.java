@@ -44,9 +44,11 @@ public class ClienteController {
     @GetMapping("/auth")
     public String authPage(
             @RequestParam(value = "tab", required = false, defaultValue = "login") String tab,
+            @RequestParam(value = "next", required = false) String next,
             Model model) {
         model.addAttribute("tab", tab);
-        return "cliente-auth"; // template em src/main/resources/templates/cliente-auth.html
+        model.addAttribute("next", next); // ✅ preserva destino
+        return "cliente-auth";
     }
 
     // POST: cadastro
@@ -147,6 +149,7 @@ public class ClienteController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
             @RequestParam String senha,
+            @RequestParam(required = false) String next,
             HttpSession session) {
 
         Optional<Cliente> clienteOpt = clienteRepository.findByEmailIgnoreCase(email);
@@ -162,7 +165,12 @@ public class ClienteController {
         // sucesso
         session.setAttribute("clienteId", c.getId());
         session.setAttribute("clienteEmail", c.getEmail());
-        return "redirect:/";
+
+        // ✅ volta para o destino (ex.: /checkout/start)
+        if (next != null && !next.isBlank()) {
+            return "redirect:" + next;
+        }
+        return "redirect:/carrinho";
     }
 
     // LOGOUT (GET) — opção rápida com alerta

@@ -126,6 +126,7 @@
 
   <div class="total" id="total-price">Total: R$ 0,00</div>
   <button class="btn-clear" id="clear-cart">Limpar Carrinho</button>
+  <button type="button" id="btnFinalizarCompra">Finalizar compra</button>
 </div>
 
 <script>
@@ -312,6 +313,17 @@
   });
 
   renderCart();
+
+  // Finalizar compra
+  document.getElementById('btnFinalizarCompra').addEventListener('click', () => {
+  const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+  if (!Array.isArray(carrinho) || carrinho.length === 0) {
+    alert('Seu carrinho está vazio.');
+    return;
+  }
+  // chama o início do checkout (o gate de login)
+  window.location.href = '/checkout/start';
+});
 </script>
 </body>
 
