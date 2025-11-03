@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Validar pedido final</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f5f7fa}
+  .card{max-width:700px;margin:40px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  button{padding:10px 14px;border-radius:6px;border:none;cursor:pointer}
+  button.primary{background:#2b6cb0;color:#fff}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>Validar pedido final</h2>
+    <p>Confira os dados do pagamento e do pedido. Se estiver tudo certo, confirme para finalizar a compra.</p>
+
+    <!-- aqui você pode exibir resumo do pedido via Thymeleaf usando model attributes -->
+    <div id="resumoPedido">
+      <!-- resumo dinâmico opcional -->
+    </div>
+
+    <div class="actions">
+      <button onclick="history.back()">Voltar</button>
+      <button class="primary" onclick="confirmar()">Confirmar pedido</button>
+    </div>
+
+    <script>
+      function confirmar(){
+        // implementar confirmação final (ex: chamar endpoint para criar pedido)
+        alert('Pedido confirmado (implemente ação no backend).');
+        // opcional: window.location.href = '/checkout/confirmacao';
+      }
+    </script>
+  </div>
+</body>
+</html>

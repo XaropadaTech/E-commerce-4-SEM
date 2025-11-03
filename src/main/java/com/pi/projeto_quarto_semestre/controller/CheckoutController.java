@@ -1,10 +1,6 @@
 package com.pi.projeto_quarto_semestre.controller;
 
-import com.pi.projeto_quarto_semestre.model.Cliente;
-import com.pi.projeto_quarto_semestre.model.Endereco;
-import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
-import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
+import java.util.Optional;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,7 +9,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.Optional;
+import com.pi.projeto_quarto_semestre.model.Cliente;
+import com.pi.projeto_quarto_semestre.model.Endereco;
+import com.pi.projeto_quarto_semestre.repository.ClienteRepository;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 @Controller
 @RequestMapping("/checkout")
@@ -136,4 +137,9 @@ public String start(HttpSession session, Model model) {
         return "checkout-pagamento"; // Thymeleaf vai procurar por checkout-pagamento.html
     }
 
+    @GetMapping("/validar")
+    public String validarPedidoFinal(Model model) {
+        // Aqui você pode adicionar dados do pedido no model se precisar
+        return "validar-pedido-final";
+    }
 }

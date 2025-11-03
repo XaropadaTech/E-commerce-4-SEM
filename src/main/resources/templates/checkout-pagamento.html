@@ -1,11 +1,214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pagamento</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; background:#f5f7fa; padding:20px; }
+  .card { max-width:700px; margin:auto; background:#fff; padding:18px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.06); }
+  h2{ color:#333; margin-top:0 }
+  .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  label{ font-weight:600; }
+  input[type="text"], input[type="number"], select { padding:8px 10px; border:1px solid #ccc; border-radius:8px; width:100%; box-sizing:border-box; }
+  .radio-group{ display:flex; gap:12px; align-items:center; margin:8px 0 16px; }
+  .card-form { margin-top:12px; padding:12px; border-radius:10px; background:#fafafa; border:1px solid #eee; display:none; }
+  .actions{ display:flex; gap:12px; justify-content:flex-end; margin-top:18px; }
+  button{ padding:10px 16px; border-radius:8px; border:none; cursor:pointer; }
+  button.primary{ background:#2b6cb0; color:#fff; }
+  button.ghost{ background:#e2e8f0; color:#111; }
+  .error{ color:#b00020; font-size:.9rem; margin-top:8px; }
+  .success{ color:#2e7d32; font-size:.95rem; margin-top:8px; }
+</style>
 </head>
 <body>
-<p>Aqui é o pagamento fi</p>
+<div class="card">
+  <h2>Pagamento</h2>
+
+  <div>
+    <label>Forma de pagamento (selecione uma):</label>
+    <div class="radio-group" id="metodos">
+      <label><input type="radio" name="forma" value="BOLETO"> Boleto</label>
+      <label><input type="radio" name="forma" value="CARTAO_CREDITO"> Cartão de Crédito</label>
+      <label><input type="radio" name="forma" value="CARTAO_DEBITO"> Cartão de Débito</label>
+    </div>
+  </div>
+
+  <div id="cardSection" class="card-form" aria-hidden="true">
+    <div class="row" style="gap:8px;">
+      <div style="flex:2">
+        <label>Número do cartão</label>
+        <input id="numeroCartao" type="text" inputmode="numeric" maxlength="23" placeholder="0000 0000 0000 0000">
+      </div>
+      <div style="flex:1; min-width:110px;">
+        <label>CVV</label>
+        <input id="cvv" type="text" inputmode="numeric" maxlength="4" placeholder="123">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <div style="flex:2">
+        <label>Nome completo</label>
+        <input id="nomeTitular" type="text" placeholder="Nome do titular">
+      </div>
+      <div style="flex:1; min-width:120px;">
+        <label>Validade (MM/AA)</label>
+        <input id="dataVencimento" type="text" maxlength="5" placeholder="MM/AA">
+      </div>
+      <div style="flex:1; min-width:120px;">
+        <label>Parcelas</label>
+        <select id="parcelas">
+          <option value="1">1x</option>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+          <option value="4">4x</option>
+          <option value="5">5x</option>
+          <option value="6">6x</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="feedback" role="status"></div>
+
+  <div class="actions">
+    <button class="ghost" id="btnVoltar" type="button" onclick="history.back()">Voltar</button>
+    <button class="primary" id="btnValidar" type="button" disabled>Validar pedido final</button>
+  </div>
+</div>
+
+<script>
+  const metodoRadios = document.querySelectorAll('input[name="forma"]');
+  const cardSection = document.getElementById('cardSection');
+  const btnValidar = document.getElementById('btnValidar');
+  const feedback = document.getElementById('feedback');
+
+  function onlyDigits(s){ return (s||'').replace(/\D/g,''); }
+
+  function maskCardNumber(v){
+    const d = onlyDigits(v).slice(0,19);
+    return d.replace(/(.{4})/g,'$1 ').trim();
+  }
+
+  function nomeValido(nome){
+    if(!nome) return false;
+    const parts = nome.trim().split(/\s+/).filter(Boolean);
+    if(parts.length < 2) return false;
+    return parts.every(p => p.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g,'').length >= 2);
+  }
+
+  function validaCartao(){
+    const numero = onlyDigits(document.getElementById('numeroCartao').value);
+    const cvv = onlyDigits(document.getElementById('cvv').value);
+    const nome = document.getElementById('nomeTitular').value;
+    const venc = document.getElementById('dataVencimento').value;
+    const parcelas = Number(document.getElementById('parcelas').value);
+
+    if(!numero || numero.length < 13) return false;
+    if(!cvv || (cvv.length !==3 && cvv.length !==4)) return false;
+    if(!nomeValido(nome)) return false;
+    if(!/^(0[1-9]|1[0-2])\/\d{2}$/.test(venc)) return false;
+    if(!parcelas || parcelas < 1) return false;
+    return true;
+  }
+
+  function atualizaEstado(){
+    const selecionado = document.querySelector('input[name="forma"]:checked');
+    feedback.textContent = '';
+    feedback.className = '';
+    if(!selecionado){
+      cardSection.style.display = 'none';
+      cardSection.setAttribute('aria-hidden','true');
+      btnValidar.disabled = true;
+      return;
+    }
+
+    const val = selecionado.value;
+    if(val === 'BOLETO'){
+      cardSection.style.display = 'none';
+      cardSection.setAttribute('aria-hidden','true');
+      btnValidar.disabled = false;
+    } else {
+      cardSection.style.display = 'block';
+      cardSection.setAttribute('aria-hidden','false');
+      btnValidar.disabled = !validaCartao();
+    }
+  }
+
+  metodoRadios.forEach(r => r.addEventListener('change', atualizaEstado));
+
+  document.getElementById('numeroCartao').addEventListener('input', (e)=>{
+    const pos = e.target.selectionStart;
+    e.target.value = maskCardNumber(e.target.value);
+    atualizaEstado();
+  });
+  document.getElementById('cvv').addEventListener('input', (e)=>{
+    e.target.value = onlyDigits(e.target.value).slice(0,4);
+    atualizaEstado();
+  });
+  document.getElementById('dataVencimento').addEventListener('input', (e)=>{
+    let v = onlyDigits(e.target.value).slice(0,4);
+    if(v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+    e.target.value = v;
+    atualizaEstado();
+  });
+  document.getElementById('nomeTitular').addEventListener('input', atualizaEstado);
+  document.getElementById('parcelas').addEventListener('change', atualizaEstado);
+
+  btnValidar.addEventListener('click', async ()=>{
+    feedback.textContent = '';
+    feedback.className = '';
+
+    const selecionado = document.querySelector('input[name="forma"]:checked');
+    if(!selecionado){
+      feedback.textContent = 'Selecione uma forma de pagamento.';
+      feedback.className = 'error';
+      return;
+    }
+
+    const forma = selecionado.value;
+    const payload = { formaPagamento: forma };
+
+    if(forma !== 'BOLETO'){
+      if(!validaCartao()){
+        feedback.textContent = 'Preencha corretamente os dados do cartão.';
+        feedback.className = 'error';
+        return;
+      }
+      payload.pagamentoCartao = {
+        numeroCartao: onlyDigits(document.getElementById('numeroCartao').value),
+        cvv: onlyDigits(document.getElementById('cvv').value),
+        nomeTitular: document.getElementById('nomeTitular').value.trim(),
+        dataVencimento: document.getElementById('dataVencimento').value,
+        numeroParcelas: Number(document.getElementById('parcelas').value)
+      };
+    }
+
+    try{
+      btnValidar.disabled = true;
+      const res = await fetch('/api/pagamento/processar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      if(res.ok){
+        feedback.textContent = text || 'Pagamento validado com sucesso.';
+        feedback.className = 'success';
+        window.location.href = '/checkout/validar';
+      } else {
+        feedback.textContent = text || 'Erro ao validar pagamento.';
+        feedback.className = 'error';
+      }
+    }catch(err){
+      feedback.textContent = 'Erro de conexão.';
+      feedback.className = 'error';
+    } finally {
+      btnValidar.disabled = false;
+    }
+  });
+
+  atualizaEstado();
+</script>
 </body>
 </html>
