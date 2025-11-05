@@ -1,39 +1,191 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Validar pedido final</title>
-<style>
-  body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f5f7fa}
-  .card{max-width:700px;margin:40px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
-  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-  button{padding:10px 14px;border-radius:6px;border:none;cursor:pointer}
-  button.primary{background:#2b6cb0;color:#fff}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Validar pedido final</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 20px;
+      background: #f5f7fa
+    }
+
+    .card {
+      max-width: 900px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .06)
+    }
+
+    h2 {
+      margin: 0 0 8px 0
+    }
+
+    .muted {
+      color: #6b7280
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0
+    }
+
+    th,
+    td {
+      border: 1px solid #e5e7eb;
+      padding: 10px;
+      text-align: left
+    }
+
+    thead th {
+      background: #f9fafb
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0
+    }
+
+    .box {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px
+    }
+
+    .totais {
+      max-width: 360px;
+      margin-left: auto
+    }
+
+    .totais .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0
+    }
+
+    .totais .row.total {
+      border-top: 1px dashed #e5e7eb;
+      margin-top: 6px;
+      padding-top: 10px;
+      font-weight: 700
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px
+    }
+
+    button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer
+    }
+
+    button.primary {
+      background: #2b6cb0;
+      color: #fff
+    }
+  </style>
 </head>
+
 <body>
   <div class="card">
     <h2>Validar pedido final</h2>
-    <p>Confira os dados do pagamento e do pedido. Se estiver tudo certo, confirme para finalizar a compra.</p>
+    <p class="muted">Confira os dados do pedido. Se estiver tudo certo, confirme para finalizar a compra.</p>
 
-    <!-- aqui você pode exibir resumo do pedido via Thymeleaf usando model attributes -->
-    <div id="resumoPedido">
-      <!-- resumo dinâmico opcional -->
+    <!-- Produtos -->
+    <table th:if="${itens != null and !#lists.isEmpty(itens)}">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th style="width:140px">Preço unit.</th>
+          <th style="width:90px">Qtd</th>
+          <th style="width:160px">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="it : ${itens}">
+          <td th:text="${it.nome}">Produto</td>
+          <td th:text="${#numbers.formatDecimal(it.precoUnit,1,'COMMA',2,'POINT')}">0,00</td>
+          <td th:text="${it.quantidade}">1</td>
+          <td th:text="${#numbers.formatDecimal(it.subtotal,1,'COMMA',2,'POINT')}">0,00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Endereço e Pagamento -->
+    <div class="grid">
+      <div class="box">
+        <h3 style="margin:0 0 6px 0;">Endereço de entrega</h3>
+        <div th:if="${enderecoEntrega != null}">
+          <div th:text="${enderecoEntrega.logradouro} + ', ' + ${enderecoEntrega.numero}">Rua X, 123</div>
+          <div class="muted" th:if="${enderecoEntrega.complemento}" th:text="${enderecoEntrega.complemento}">Apto 10
+          </div>
+          <div th:text="${enderecoEntrega.bairro} + ' — ' + ${enderecoEntrega.cidade} + '/' + ${enderecoEntrega.uf}">
+            Bairro — Cidade/UF</div>
+          <div class="muted" th:text="'CEP: ' + ${enderecoEntrega.cep}">CEP: 00000-000</div>
+        </div>
+        <div th:unless="${enderecoEntrega != null}" class="muted">Nenhum endereço selecionado.</div>
+      </div>
+
+      <div class="box">
+        <h3 style="margin:0 0 6px 0;">Forma de pagamento</h3>
+        <div th:if="${pagamento != null}">
+          <div th:switch="${pagamento.metodo}">
+            <div th:case="'BOLETO'">Boleto bancário</div>
+            <div th:case="'PIX'">Pix<br><small class="muted">O QR Code será exibido após confirmar.</small></div>
+            <div th:case="'CARTAO'">
+              Cartão<br />
+              <small th:text="'Nome: ' + ${pagamento.nomeCompleto}"></small><br />
+              <small th:text="'Cartão: ' + ${pagamento.numeroCartao}"></small><br />
+              <small th:text="'Validade: ' + ${pagamento.validade} + ' — Parcelas: ' + ${pagamento.parcelas}"></small>
+            </div>
+            <div th:case="*">Método não informado.</div>
+          </div>
+        </div>
+        <div th:unless="${pagamento != null}" class="muted">Nenhuma forma de pagamento selecionada.</div>
+      </div>
     </div>
 
+    <!-- Totais -->
+    <div class="totais box">
+      <div class="row">
+        <span>Subtotal</span>
+        <strong th:text="${#numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">0,00</strong>
+      </div>
+      <div class="row">
+        <span>Frete</span>
+        <strong th:text="${#numbers.formatDecimal(frete,1,'COMMA',2,'POINT')}">0,00</strong>
+      </div>
+      <div class="row total">
+        <span>Total</span>
+        <strong th:text="${#numbers.formatDecimal(totalGeral,1,'COMMA',2,'POINT')}">0,00</strong>
+      </div>
+    </div>
+
+    <!-- Ações -->
     <div class="actions">
-      <button onclick="history.back()">Voltar</button>
-      <button class="primary" onclick="confirmar()">Confirmar pedido</button>
-    </div>
+      <!-- Voltar para a etapa de pagamento -->
+      <form th:action="@{/checkout/resumo/back}" method="post">
+        <button type="submit">Voltar</button>
+      </form>
 
-    <script>
-      function confirmar(){
-        // implementar confirmação final (ex: chamar endpoint para criar pedido)
-        alert('Pedido confirmado (implemente ação no backend).');
-        // opcional: window.location.href = '/checkout/confirmacao';
-      }
-    </script>
+      <!-- Confirmar pedido -->
+      <form th:action="@{/checkout/resumo/concluir}" method="post">
+        <button class="primary" type="submit">Confirmar pedido</button>
+      </form>
+    </div>
   </div>
 </body>
+
 </html>

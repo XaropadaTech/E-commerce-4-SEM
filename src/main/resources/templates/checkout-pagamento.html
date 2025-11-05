@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -11,8 +11,9 @@
   .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
   label{ font-weight:600; }
   input[type="text"], input[type="number"], select { padding:8px 10px; border:1px solid #ccc; border-radius:8px; width:100%; box-sizing:border-box; }
-  .radio-group{ display:flex; gap:12px; align-items:center; margin:8px 0 16px; }
+  .radio-group{ display:flex; gap:16px; align-items:center; margin:8px 0 16px; flex-wrap:wrap; }
   .card-form { margin-top:12px; padding:12px; border-radius:10px; background:#fafafa; border:1px solid #eee; display:none; }
+  .pix-info { background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:10px; margin-top:12px; display:none; }
   .actions{ display:flex; gap:12px; justify-content:flex-end; margin-top:18px; }
   button{ padding:10px 16px; border-radius:8px; border:none; cursor:pointer; }
   button.primary{ background:#2b6cb0; color:#fff; }
@@ -23,25 +24,28 @@
 </head>
 <body>
 <div class="card">
-  <h2>Pagamento</h2>
+<h2>Pagamento</h2>
 
+<form id="formPagamento" method="post" action="/checkout/pagamento">
   <div>
     <label>Forma de pagamento (selecione uma):</label>
-    <div class="radio-group" id="metodos">
-      <label><input type="radio" name="forma" value="BOLETO"> Boleto</label>
-      <label><input type="radio" name="forma" value="CARTAO_CREDITO"> Cartão de Crédito</label>
-      <label><input type="radio" name="forma" value="CARTAO_DEBITO"> Cartão de Débito</label>
+    <div class="radio-group">
+      <label><input type="radio" name="metodo" value="BOLETO"> Boleto</label>
+      <label><input type="radio" name="metodo" value="CARTAO"> Cartão de Crédito/Débito</label>
+      <label><input type="radio" name="metodo" value="PIX"> Pix</label>
     </div>
   </div>
 
+  <!-- Cartão -->
   <div id="cardSection" class="card-form" aria-hidden="true">
-    <div class="row" style="gap:8px;">
+    <div class="row">
       <div style="flex:2">
         <label>Número do cartão</label>
-        <input id="numeroCartao" type="text" inputmode="numeric" maxlength="23" placeholder="0000 0000 0000 0000">
+        <input id="numeroCartao" name="numeroCartao" type="text" inputmode="numeric" maxlength="23" placeholder="0000 0000 0000 0000">
       </div>
       <div style="flex:1; min-width:110px;">
         <label>CVV</label>
+        <!-- sem name: não enviamos CVV ao backend -->
         <input id="cvv" type="text" inputmode="numeric" maxlength="4" placeholder="123">
       </div>
     </div>
@@ -49,61 +53,57 @@
     <div class="row" style="margin-top:8px;">
       <div style="flex:2">
         <label>Nome completo</label>
-        <input id="nomeTitular" type="text" placeholder="Nome do titular">
+        <input id="nomeTitular" name="nomeCompleto" type="text" placeholder="Nome do titular">
       </div>
       <div style="flex:1; min-width:120px;">
         <label>Validade (MM/AA)</label>
-        <input id="dataVencimento" type="text" maxlength="5" placeholder="MM/AA">
+        <input id="dataVencimento" name="validade" type="text" maxlength="5" placeholder="MM/AA">
       </div>
       <div style="flex:1; min-width:120px;">
         <label>Parcelas</label>
-        <select id="parcelas">
-          <option value="1">1x</option>
-          <option value="2">2x</option>
-          <option value="3">3x</option>
-          <option value="4">4x</option>
-          <option value="5">5x</option>
-          <option value="6">6x</option>
+        <select id="parcelas" name="parcelas">
+          <option value="1">1x</option><option value="2">2x</option><option value="3">3x</option>
+          <option value="4">4x</option><option value="5">5x</option><option value="6">6x</option>
         </select>
       </div>
     </div>
   </div>
 
+  <!-- PIX -->
+  <div id="pixInfo" class="pix-info" aria-hidden="true">
+    <p><strong>Pagamento via Pix</strong></p>
+    <p>Após confirmar o pedido, exibiremos o QR Code/código Pix para pagamento.</p>
+  </div>
+
   <div id="feedback" role="status"></div>
 
   <div class="actions">
-    <button class="ghost" id="btnVoltar" type="button" onclick="history.back()">Voltar</button>
+    <button class="ghost" type="button" onclick="window.location.href='/checkout/start'">Voltar</button>
     <button class="primary" id="btnValidar" type="button" disabled>Validar pedido final</button>
   </div>
-</div>
+</form>
 
 <script>
-  const metodoRadios = document.querySelectorAll('input[name="forma"]');
+  const radios = document.querySelectorAll('input[name="metodo"]');
   const cardSection = document.getElementById('cardSection');
+  const pixInfo = document.getElementById('pixInfo');
   const btnValidar = document.getElementById('btnValidar');
   const feedback = document.getElementById('feedback');
 
   function onlyDigits(s){ return (s||'').replace(/\D/g,''); }
-
-  function maskCardNumber(v){
-    const d = onlyDigits(v).slice(0,19);
-    return d.replace(/(.{4})/g,'$1 ').trim();
-  }
-
+  function maskCardNumber(v){ const d = onlyDigits(v).slice(0,19); return d.replace(/(.{4})/g,'$1 ').trim(); }
   function nomeValido(nome){
     if(!nome) return false;
     const parts = nome.trim().split(/\s+/).filter(Boolean);
     if(parts.length < 2) return false;
     return parts.every(p => p.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ]/g,'').length >= 2);
   }
-
   function validaCartao(){
     const numero = onlyDigits(document.getElementById('numeroCartao').value);
     const cvv = onlyDigits(document.getElementById('cvv').value);
     const nome = document.getElementById('nomeTitular').value;
     const venc = document.getElementById('dataVencimento').value;
     const parcelas = Number(document.getElementById('parcelas').value);
-
     if(!numero || numero.length < 13) return false;
     if(!cvv || (cvv.length !==3 && cvv.length !==4)) return false;
     if(!nomeValido(nome)) return false;
@@ -112,103 +112,118 @@
     return true;
   }
 
-  function atualizaEstado(){
-    const selecionado = document.querySelector('input[name="forma"]:checked');
-    feedback.textContent = '';
-    feedback.className = '';
-    if(!selecionado){
-      cardSection.style.display = 'none';
-      cardSection.setAttribute('aria-hidden','true');
-      btnValidar.disabled = true;
-      return;
-    }
+  function toggleRequired(el, needed){
+    if(!el) return;
+    if(needed){ el.setAttribute('required','required'); }
+    else{ el.removeAttribute('required'); }
+  }
 
-    const val = selecionado.value;
-    if(val === 'BOLETO'){
-      cardSection.style.display = 'none';
-      cardSection.setAttribute('aria-hidden','true');
-      btnValidar.disabled = false;
-    } else {
+  function atualizaUI(){
+    const sel = document.querySelector('input[name="metodo"]:checked');
+    // esconde tudo
+    cardSection.style.display = 'none';
+    cardSection.setAttribute('aria-hidden','true');
+    pixInfo.style.display = 'none';
+    pixInfo.setAttribute('aria-hidden','true');
+    btnValidar.disabled = true;
+
+    // remove required dos campos do cartão quando não for cartão
+    const camposCartao = [
+      document.getElementById('numeroCartao'),
+      document.getElementById('nomeTitular'),
+      document.getElementById('dataVencimento'),
+      document.getElementById('parcelas')
+    ];
+    camposCartao.forEach(c => toggleRequired(c, false));
+
+    if(!sel) return;
+
+    if(sel.value === 'CARTAO'){
       cardSection.style.display = 'block';
       cardSection.setAttribute('aria-hidden','false');
+      // coloca required só quando for cartão
+      camposCartao.forEach(c => toggleRequired(c, true));
       btnValidar.disabled = !validaCartao();
+    } else if(sel.value === 'PIX'){
+      pixInfo.style.display = 'block';
+      pixInfo.setAttribute('aria-hidden','false');
+      btnValidar.disabled = false;
+    } else { // BOLETO
+      btnValidar.disabled = false;
     }
   }
 
-  metodoRadios.forEach(r => r.addEventListener('change', atualizaEstado));
-
-  document.getElementById('numeroCartao').addEventListener('input', (e)=>{
-    const pos = e.target.selectionStart;
-    e.target.value = maskCardNumber(e.target.value);
-    atualizaEstado();
-  });
-  document.getElementById('cvv').addEventListener('input', (e)=>{
-    e.target.value = onlyDigits(e.target.value).slice(0,4);
-    atualizaEstado();
-  });
-  document.getElementById('dataVencimento').addEventListener('input', (e)=>{
+  radios.forEach(r => r.addEventListener('change', atualizaUI));
+  document.getElementById('numeroCartao').addEventListener('input',(e)=>{ e.target.value = maskCardNumber(e.target.value); atualizaUI(); });
+  document.getElementById('cvv').addEventListener('input',(e)=>{ e.target.value = onlyDigits(e.target.value).slice(0,4); atualizaUI(); });
+  document.getElementById('dataVencimento').addEventListener('input',(e)=>{
     let v = onlyDigits(e.target.value).slice(0,4);
     if(v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
-    e.target.value = v;
-    atualizaEstado();
+    e.target.value = v; atualizaUI();
   });
-  document.getElementById('nomeTitular').addEventListener('input', atualizaEstado);
-  document.getElementById('parcelas').addEventListener('change', atualizaEstado);
+  document.getElementById('nomeTitular').addEventListener('input', atualizaUI);
+  document.getElementById('parcelas').addEventListener('change', atualizaUI);
 
-  btnValidar.addEventListener('click', async ()=>{
-    feedback.textContent = '';
-    feedback.className = '';
+  async function syncEIrParaResumo() {
+    try {
+      const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+const itens = carrinho.map(p => {
+  const preco = Number(p.preco ?? p.precoUnit ?? p.price ?? 0);
+  const qtd = Number(p.qtd ?? p.quantidade ?? p.qty ?? 1);
+  return {
+    produtoId: p.id ?? p.produtoId ?? null,
+    nome: p.nome ?? p.title ?? 'Produto',
+    precoUnit: isNaN(preco) ? 0 : preco,
+    quantidade: isNaN(qtd) ? 1 : qtd
+  };
+});
 
-    const selecionado = document.querySelector('input[name="forma"]:checked');
-    if(!selecionado){
+// frete pode vir como "12,90", "12.9" ou objeto — normaliza:
+let freteLS = localStorage.getItem('frete');
+let freteNum = 0;
+if (freteLS) {
+  try {
+    const fObj = JSON.parse(freteLS);
+    freteNum = Number(fObj?.valor ?? fObj ?? 0);
+  } catch {
+    freteNum = Number(String(freteLS).replace(',', '.'));
+  }
+}
+if (isNaN(freteNum)) freteNum = 0;
+
+await fetch('/checkout/sync-cart', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({ itens, frete: freteNum })
+});
+
+      document.getElementById('formPagamento').submit();
+    } catch (err) {
+      feedback.textContent = 'Erro ao sincronizar o carrinho.';
+      feedback.className = 'error';
+      btnValidar.disabled = false;
+    }
+  }
+
+  document.getElementById('btnValidar').addEventListener('click', async ()=>{
+    const sel = document.querySelector('input[name="metodo"]:checked');
+    if(!sel){
       feedback.textContent = 'Selecione uma forma de pagamento.';
       feedback.className = 'error';
       return;
     }
-
-    const forma = selecionado.value;
-    const payload = { formaPagamento: forma };
-
-    if(forma !== 'BOLETO'){
-      if(!validaCartao()){
-        feedback.textContent = 'Preencha corretamente os dados do cartão.';
-        feedback.className = 'error';
-        return;
-      }
-      payload.pagamentoCartao = {
-        numeroCartao: onlyDigits(document.getElementById('numeroCartao').value),
-        cvv: onlyDigits(document.getElementById('cvv').value),
-        nomeTitular: document.getElementById('nomeTitular').value.trim(),
-        dataVencimento: document.getElementById('dataVencimento').value,
-        numeroParcelas: Number(document.getElementById('parcelas').value)
-      };
-    }
-
-    try{
-      btnValidar.disabled = true;
-      const res = await fetch('/api/pagamento/processar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const text = await res.text();
-      if(res.ok){
-        feedback.textContent = text || 'Pagamento validado com sucesso.';
-        feedback.className = 'success';
-        window.location.href = '/checkout/validar';
-      } else {
-        feedback.textContent = text || 'Erro ao validar pagamento.';
-        feedback.className = 'error';
-      }
-    }catch(err){
-      feedback.textContent = 'Erro de conexão.';
+    if(sel.value === 'CARTAO' && !validaCartao()){
+      feedback.textContent = 'Preencha corretamente os dados do cartão.';
       feedback.className = 'error';
-    } finally {
-      btnValidar.disabled = false;
+      return;
     }
+    btnValidar.disabled = true;
+    feedback.textContent = '';
+    feedback.className = '';
+    await syncEIrParaResumo();
   });
 
-  atualizaEstado();
+  atualizaUI(); // estado inicial
 </script>
 </body>
 </html>

@@ -9,5 +9,7 @@ public interface EnderecoRepository extends JpaRepository<Endereco, Long> {
 
     // Método para encontrar o endereço padrão atual de um cliente
     Endereco findByClienteIdAndPadraoTrue(Long clienteId);
+    Endereco findFirstByClienteIdAndTipoOrderByIdAsc(Long clienteId, Endereco.Tipo tipo);
+
 
 }

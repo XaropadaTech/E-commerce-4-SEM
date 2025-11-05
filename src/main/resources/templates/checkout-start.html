@@ -1,239 +1,306 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="UTF-8">
-<title>Checkout</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f8f8f8;
-        margin: 0;
-        padding: 30px;
-        color: #333;
-    }
+    <meta charset="UTF-8">
+    <title>Checkout</title>
 
-    h1, h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+    <th:block th:with="t=${#httpServletRequest.getAttribute('_csrf')}" th:if="${t != null}">
+  <meta name="_csrf" th:content="${t.token}">
+  <meta name="_csrf_header" th:content="${t.headerName}">
+</th:block>
 
-    p {
-        text-align: center;
-        margin-bottom: 30px;
-    }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f8f8;
+            margin: 0;
+            padding: 30px;
+            color: #333;
+        }
 
-    /* Cards de endereço */
-    .enderecos-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: center;
-        margin-bottom: 40px;
-    }
+        h1,
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-    .endereco-card {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        padding: 20px;
-        width: 300px;
-        transition: all 0.2s;
-        position: relative;
-    }
+        p {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .endereco-card:hover {
-        transform: scale(1.02);
-    }
+        /* Cards de endereço */
+        .enderecos-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
 
-    .endereco-card.selected {
-        border: 2px solid #007bff;
-        box-shadow: 0 0 10px rgba(0,123,255,0.4);
-    }
+        .endereco-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            transition: all 0.2s;
+            position: relative;
+        }
 
-    .endereco-info p {
-        margin: 5px 0;
-        font-size: 14px;
-    }
+        .endereco-card:hover {
+            transform: scale(1.02);
+        }
 
-    /* Botões dentro do card */
-    .endereco-card button {
-        margin-top: 15px;
-        width: 100%;
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 0;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.2s;
-    }
+        .endereco-card.selected {
+            border: 2px solid #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+        }
 
-    .endereco-card button:hover {
-        background: #0056b3;
-    }
+        .endereco-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
 
-    /* Formulário de novo endereço */
-    #novoEnderecoContainer {
-        max-width: 400px;
-        margin: 0 auto 30px auto;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+        /* Botões dentro do card */
+        .endereco-card button {
+            margin-top: 15px;
+            width: 100%;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
 
-    #novoEnderecoContainer label {
-        display: block;
-        margin-bottom: 10px;
-        font-size: 14px;
-    }
+        .endereco-card button:hover {
+            background: #0056b3;
+        }
 
-    #novoEnderecoContainer input {
-        width: 100%;
-        padding: 6px 8px;
-        margin-top: 3px;
-        box-sizing: border-box;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-    }
+        /* Formulário de novo endereço */
+        #novoEnderecoContainer {
+            max-width: 400px;
+            margin: 0 auto 30px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-    /* Botão "Adicionar novo endereço" */
-    #btnMostrarFormulario {
-        display: block;
-        margin: 20px auto;
-        width: 200px;
-        text-align: center;
-    }
+        #novoEnderecoContainer label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
 
-    /* Botão Próximo */
-    .btn-next {
-        display: block;
-        margin: 40px auto 0 auto;
-        padding: 12px 25px;
-        font-size: 16px;
-        background: #28a745;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
+        #novoEnderecoContainer input {
+            width: 100%;
+            padding: 6px 8px;
+            margin-top: 3px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
 
-    .btn-next:hover {
-        background: #1e7e34;
-    }
-</style>
+        /* Botão "Adicionar novo endereço" */
+        #btnMostrarFormulario {
+            display: block;
+            margin: 20px auto;
+            width: 200px;
+            text-align: center;
+        }
+
+        /* Botões de navegação (Voltar e Próximo lado a lado) */
+.checkout-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.checkout-actions button {
+    padding: 12px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.checkout-actions .ghost {
+    background: #e2e8f0;
+    color: #111;
+}
+
+.checkout-actions .btn-next {
+    background: #28a745;
+    color: white;
+}
+
+.checkout-actions .btn-next:hover {
+    background: #1e7e34;
+}
+
+    </style>
 </head>
+
 <body>
 
-<h1>Início do Checkout</h1>
-<p>Selecione o endereço de entrega abaixo.</p>
+    <h1>Início do Checkout</h1>
+    <p>Selecione o endereço de entrega abaixo.</p>
 
-<div class="enderecos-container" id="enderecosEntrega">
-    <div th:each="end : ${cliente.enderecos}">
-        <div th:if="${end.tipo.name() == 'ENTREGA'}"
-             th:class="'endereco-card' + (${end.padrao} ? ' selected' : '')"
-             th:data-id="${end.id}">
-            <div class="endereco-info">
-                <p><strong>CEP:</strong> <span th:text="${end.cep}"></span></p>
-                <p><strong>Logradouro:</strong> <span th:text="${end.logradouro}"></span></p>
-                <p><strong>Número:</strong> <span th:text="${end.numero}"></span></p>
-                <p th:if="${end.complemento}"><strong>Complemento:</strong> <span th:text="${end.complemento}"></span></p>
-                <p><strong>Bairro:</strong> <span th:text="${end.bairro}"></span></p>
-                <p><strong>Cidade:</strong> <span th:text="${end.cidade}"></span> - <span th:text="${end.uf}"></span></p>
-            </div>
-            <button type="button" th:onclick="'selecionarEndereco(' + ${end.id} + ')'"
+    <div class="enderecos-container" id="enderecosEntrega">
+        <div th:each="end : ${cliente.enderecos}">
+            <div th:if="${end.tipo.name() == 'ENTREGA'}" th:class="'endereco-card' + (${end.padrao} ? ' selected' : '')"
+                th:data-id="${end.id}">
+                <div class="endereco-info">
+                    <p><strong>CEP:</strong> <span th:text="${end.cep}"></span></p>
+                    <p><strong>Logradouro:</strong> <span th:text="${end.logradouro}"></span></p>
+                    <p><strong>Número:</strong> <span th:text="${end.numero}"></span></p>
+                    <p th:if="${end.complemento}"><strong>Complemento:</strong> <span
+                            th:text="${end.complemento}"></span></p>
+                    <p><strong>Bairro:</strong> <span th:text="${end.bairro}"></span></p>
+                    <p><strong>Cidade:</strong> <span th:text="${end.cidade}"></span> - <span
+                            th:text="${end.uf}"></span></p>
+                </div>
+                <button type="button" th:onclick="'selecionarEndereco(' + ${end.id} + ')'"
                     th:text="${end.padrao} ? 'Selecionado' : 'Selecionar endereço para entrega'">
-            </button>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<h2>Adicionar novo endereço</h2>
-<div id="novoEnderecoContainer" style="display:none;">
-    <form th:action="@{/checkout/adicionar-endereco}" method="post" id="formNovoEndereco">
-        <input type="hidden" name="tipo" value="ENTREGA">
-        <label>CEP: <input type="text" name="cep" required maxlength="9"> </label>
-        <label>Logradouro: <input type="text" name="logradouro" required maxlength="120"> </label>
-        <label>Número: <input type="text" name="numero" required maxlength="10"> </label>
-        <label>Complemento: <input type="text" name="complemento" maxlength="60"> </label>
-        <label>Bairro: <input type="text" name="bairro" required maxlength="60"> </label>
-        <label>Cidade: <input type="text" name="cidade" required maxlength="60"> </label>
-        <label>UF: <input type="text" name="uf" required maxlength="2"> </label>
-        <button type="submit" class="btn">Salvar Endereço</button>
+    <h2>Adicionar novo endereço</h2>
+    <div id="novoEnderecoContainer" style="display:none;">
+        <form th:action="@{/checkout/adicionar-endereco}" method="post" id="formNovoEndereco">
+            <input type="hidden" name="tipo" value="ENTREGA">
+            <label>CEP: <input type="text" name="cep" required maxlength="9"> </label>
+            <label>Logradouro: <input type="text" name="logradouro" required maxlength="120"> </label>
+            <label>Número: <input type="text" name="numero" required maxlength="10"> </label>
+            <label>Complemento: <input type="text" name="complemento" maxlength="60"> </label>
+            <label>Bairro: <input type="text" name="bairro" required maxlength="60"> </label>
+            <label>Cidade: <input type="text" name="cidade" required maxlength="60"> </label>
+            <label>UF: <input type="text" name="uf" required maxlength="2"> </label>
+            <button type="submit" class="btn">Salvar Endereço</button>
+        </form>
+    </div>
+
+    <button id="btnMostrarFormulario" class="btn">Adicionar novo endereço</button>
+
+    <form th:action="@{/checkout/confirmar}" method="post" id="formCheckout">
+        <input type="hidden" name="enderecoSelecionado" id="enderecoSelecionado">
+        <div class="checkout-actions">
+            <button class="ghost" type="button" onclick="window.location.href='/carrinho'">Voltar</button>
+            <button type="button" class="btn-next" onclick="irParaPagamento()">Próximo</button>
+        </div>
     </form>
-</div>
 
-<button id="btnMostrarFormulario" class="btn">Adicionar novo endereço</button>
+    <script>
+        // Mantém o ID do endereço selecionado
+        let enderecoSelecionado = null;
 
-<form th:action="@{/checkout/confirmar}" method="post" id="formCheckout">
-    <input type="hidden" name="enderecoSelecionado" id="enderecoSelecionado">
-    <button type="button" class="btn-next" onclick="window.location.href='/checkout/pagamento'">Próximo</button>
-</form>
+        function selecionarEndereco(id) {
+            enderecoSelecionado = id;
+            document.getElementById('enderecoSelecionado').value = id;
 
-<script>
-    // Mantém o ID do endereço selecionado
-    let enderecoSelecionado = null;
+            // Destaca o card selecionado e atualiza os botões
+            document.querySelectorAll('.endereco-card').forEach(card => {
+                const btn = card.querySelector('button');
+                if (card.dataset.id == id) {
+                    card.classList.add('selected');
+                    btn.textContent = 'Selecionado';
+                } else {
+                    card.classList.remove('selected');
+                    btn.textContent = 'Selecionar endereço para entrega';
+                }
+            });
+        }
 
-    function selecionarEndereco(id) {
-        enderecoSelecionado = id;
-        document.getElementById('enderecoSelecionado').value = id;
+        const btnMostrarFormulario = document.getElementById('btnMostrarFormulario');
+        const novoEnderecoContainer = document.getElementById('novoEnderecoContainer');
 
-        // Destaca o card selecionado e atualiza os botões
-        document.querySelectorAll('.endereco-card').forEach(card => {
-            const btn = card.querySelector('button');
-            if (card.dataset.id == id) {
-                card.classList.add('selected');
-                btn.textContent = 'Selecionado';
-            } else {
-                card.classList.remove('selected');
-                btn.textContent = 'Selecionar endereço para entrega';
+        btnMostrarFormulario.addEventListener('click', () => {
+            if (novoEnderecoContainer.style.display === 'none' || novoEnderecoContainer.style.display === '') {
+                novoEnderecoContainer.style.display = 'block';
+                btnMostrarFormulario.style.display = 'none';
             }
         });
+  
+        // Lógica ViaCEP para preencher automaticamente os campos do novo endereço
+        const inputCep = document.querySelector('#formNovoEndereco input[name="cep"]');
+        const inputLogradouro = document.querySelector('#formNovoEndereco input[name="logradouro"]');
+        const inputBairro = document.querySelector('#formNovoEndereco input[name="bairro"]');
+        const inputCidade = document.querySelector('#formNovoEndereco input[name="cidade"]');
+        const inputUf = document.querySelector('#formNovoEndereco input[name="uf"]');
+
+        inputCep.addEventListener('blur', () => {
+            let cep = inputCep.value.replace(/\D/g, '');
+            if (cep.length !== 8) return; // CEP inválido
+
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.erro) {
+                        inputLogradouro.value = data.logradouro || '';
+                        inputBairro.value = data.bairro || '';
+                        inputCidade.value = data.localidade || '';
+                        inputUf.value = data.uf || '';
+                    }
+                })
+                .catch(err => console.error('Erro ao buscar CEP:', err));
+        });
+
+        
+ // pega cabeçalhos CSRF se existirem
+  function getCsrfHeaders() {
+    const token  = document.querySelector('meta[name="_csrf"]')?.content;
+    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+    return (token && header) ? { [header]: token } : {};
+  }
+
+  async function irParaPagamento() {
+    // pega o id do hidden já preenchido pela sua selecionarEndereco(id)
+    const idSel = document.getElementById('enderecoSelecionado')?.value;
+    if (!idSel) {
+      alert('Selecione um endereço de entrega antes de continuar.');
+      return;
     }
-</script>
 
-<script>
-    const btnMostrarFormulario = document.getElementById('btnMostrarFormulario');
-    const novoEnderecoContainer = document.getElementById('novoEnderecoContainer');
+    // desabilita o botão enquanto salva
+    const btn = document.querySelector('.btn-next');
+    if (btn) { btn.disabled = true; btn.textContent = 'Avançando...'; }
 
-    btnMostrarFormulario.addEventListener('click', () => {
-        if (novoEnderecoContainer.style.display === 'none' || novoEnderecoContainer.style.display === '') {
-            novoEnderecoContainer.style.display = 'block';
-            btnMostrarFormulario.style.display = 'none';
-        }
-    });
-</script>
+    try {
+      // salva o id na sessão do backend
+      const resp = await fetch('/checkout/selecionar-endereco', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...getCsrfHeaders()
+        },
+        body: 'enderecoId=' + encodeURIComponent(idSel)
+      });
 
-<script>
-    // Lógica ViaCEP para preencher automaticamente os campos do novo endereço
-    const inputCep = document.querySelector('#formNovoEndereco input[name="cep"]');
-    const inputLogradouro = document.querySelector('#formNovoEndereco input[name="logradouro"]');
-    const inputBairro = document.querySelector('#formNovoEndereco input[name="bairro"]');
-    const inputCidade = document.querySelector('#formNovoEndereco input[name="cidade"]');
-    const inputUf = document.querySelector('#formNovoEndereco input[name="uf"]');
+      if (!resp.ok) throw new Error('Falha ao salvar endereço');
 
-    inputCep.addEventListener('blur', () => {
-        let cep = inputCep.value.replace(/\D/g, '');
-        if (cep.length !== 8) return; // CEP inválido
+      // ok -> segue para pagamento
+      window.location.href = '/checkout/pagamento';
+    } catch (e) {
+      console.error(e);
+      alert('Não foi possível salvar o endereço selecionado. Tente novamente.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Próximo'; }
+    }
+  }
 
-        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.erro) {
-                    inputLogradouro.value = data.logradouro || '';
-                    inputBairro.value = data.bairro || '';
-                    inputCidade.value = data.localidade || '';
-                    inputUf.value = data.uf || '';
-                }
-            })
-            .catch(err => console.error('Erro ao buscar CEP:', err));
-    });
-</script>
+  
+    </script>
 
 
 </body>
-</html>
 
 </html>
