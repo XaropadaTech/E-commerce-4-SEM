@@ -176,18 +176,26 @@
 
     <h2>Adicionar novo endereço</h2>
     <div id="novoEnderecoContainer" style="display:none;">
-        <form th:action="@{/checkout/adicionar-endereco}" method="post" id="formNovoEndereco">
-            <input type="hidden" name="tipo" value="ENTREGA">
-            <label>CEP: <input type="text" name="cep" required maxlength="9"> </label>
-            <label>Logradouro: <input type="text" name="logradouro" required maxlength="120"> </label>
-            <label>Número: <input type="text" name="numero" required maxlength="10"> </label>
-            <label>Complemento: <input type="text" name="complemento" maxlength="60"> </label>
-            <label>Bairro: <input type="text" name="bairro" required maxlength="60"> </label>
-            <label>Cidade: <input type="text" name="cidade" required maxlength="60"> </label>
-            <label>UF: <input type="text" name="uf" required maxlength="2"> </label>
-            <button type="submit" class="btn">Salvar Endereço</button>
-        </form>
-    </div>
+  <form th:action="@{/checkout/adicionar-endereco}" method="post" id="formNovoEndereco">
+    <input type="hidden" name="tipo" value="ENTREGA">
+
+    <label>
+      CEP:
+      <input type="text" name="cep" id="novoCep" required maxlength="9" placeholder="00000-000">
+      <small id="cepMsg" style="display:block;margin-top:4px;color:#666;"></small>
+    </label>
+
+    <label>Logradouro: <input type="text" name="logradouro" required maxlength="120"> </label>
+    <label>Número: <input type="text" name="numero" required maxlength="10"> </label>
+    <label>Complemento: <input type="text" name="complemento" maxlength="60"> </label>
+    <label>Bairro: <input type="text" name="bairro" required maxlength="60"> </label>
+    <label>Cidade: <input type="text" name="cidade" required maxlength="60"> </label>
+    <label>UF: <input type="text" name="uf" required maxlength="2"> </label>
+
+    <button type="submit" class="btn" id="btnSalvarEndereco" disabled>Salvar Endereço</button>
+  </form>
+</div>
+
 
     <button id="btnMostrarFormulario" class="btn">Adicionar novo endereço</button>
 
@@ -231,29 +239,95 @@
         });
   
         // Lógica ViaCEP para preencher automaticamente os campos do novo endereço
-        const inputCep = document.querySelector('#formNovoEndereco input[name="cep"]');
-        const inputLogradouro = document.querySelector('#formNovoEndereco input[name="logradouro"]');
-        const inputBairro = document.querySelector('#formNovoEndereco input[name="bairro"]');
-        const inputCidade = document.querySelector('#formNovoEndereco input[name="cidade"]');
-        const inputUf = document.querySelector('#formNovoEndereco input[name="uf"]');
+          // === Helpers ===
+  const formNovoEnd = document.getElementById('formNovoEndereco');
+  const inputCep        = formNovoEnd.querySelector('input[name="cep"]');
+  const inputLogradouro = formNovoEnd.querySelector('input[name="logradouro"]');
+  const inputBairro     = formNovoEnd.querySelector('input[name="bairro"]');
+  const inputCidade     = formNovoEnd.querySelector('input[name="cidade"]');
+  const inputUf         = formNovoEnd.querySelector('input[name="uf"]');
+  const cepMsg          = document.getElementById('cepMsg');
+  const btnSalvar       = document.getElementById('btnSalvarEndereco');
 
-        inputCep.addEventListener('blur', () => {
-            let cep = inputCep.value.replace(/\D/g, '');
-            if (cep.length !== 8) return; // CEP inválido
+  let cepValido = false;
 
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.erro) {
-                        inputLogradouro.value = data.logradouro || '';
-                        inputBairro.value = data.bairro || '';
-                        inputCidade.value = data.localidade || '';
-                        inputUf.value = data.uf || '';
-                    }
-                })
-                .catch(err => console.error('Erro ao buscar CEP:', err));
-        });
+  function maskCep(v){
+    return String(v||'').replace(/\D/g,'').slice(0,8).replace(/^(\d{5})(\d{0,3})$/, (_,a,b)=> b?`${a}-${b}`:a);
+  }
+  function onlyDigits(v){ return String(v||'').replace(/\D/g,''); }
 
+  function setStatus(ok, msg){
+    cepValido = !!ok;
+    if (ok){
+      cepMsg.style.color = '#2e7d32';
+      cepMsg.textContent = msg || 'CEP válido.';
+      btnSalvar.disabled = false;
+      inputCep.style.borderColor = '#2e7d32';
+    } else {
+      cepMsg.style.color = '#b00020';
+      cepMsg.textContent = msg || 'CEP inválido.';
+      btnSalvar.disabled = true;
+      inputCep.style.borderColor = '#b00020';
+    }
+  }
+
+  async function consultarViaCep(cepLimpo){
+    try{
+      const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await resp.json();
+      if (data.erro){
+        // limpa campos de endereço se CEP não existe
+        inputLogradouro.value = '';
+        inputBairro.value     = '';
+        inputCidade.value     = '';
+        inputUf.value         = '';
+        setStatus(false, 'CEP não encontrado.');
+        return;
+      }
+      // preenche
+      inputLogradouro.value = data.logradouro || '';
+      inputBairro.value     = data.bairro     || '';
+      inputCidade.value     = data.localidade || '';
+      inputUf.value         = data.uf         || '';
+      setStatus(true, 'CEP válido.');
+    }catch(e){
+      setStatus(false, 'Falha ao consultar o ViaCEP.');
+      console.error(e);
+    }
+  }
+
+  // === Eventos CEP ===
+  inputCep.addEventListener('input', (e)=>{
+    const masked = maskCep(e.target.value);
+    const pos = e.target.selectionStart;
+    e.target.value = masked;
+    // não consulta a cada digito; consulta quando completo (8 dígitos)
+    const limpo = onlyDigits(masked);
+    if (limpo.length < 8){
+      btnSalvar.disabled = true;
+      cepMsg.textContent = '';
+      inputCep.style.borderColor = '#ccc';
+    }
+  });
+
+  inputCep.addEventListener('blur', ()=>{
+    const limpo = onlyDigits(inputCep.value);
+    if (limpo.length !== 8){
+      setStatus(false, 'Informe um CEP com 8 dígitos.');
+      return;
+    }
+    consultarViaCep(limpo);
+  });
+
+  // === Submit: bloqueia se CEP inválido ===
+  formNovoEnd.addEventListener('submit', (e)=>{
+    const limpo = onlyDigits(inputCep.value);
+    if (limpo.length !== 8 || !cepValido){
+      e.preventDefault();
+      setStatus(false, 'Valide o CEP antes de salvar.');
+      inputCep.focus();
+    }
+  });
         
  // pega cabeçalhos CSRF se existirem
   function getCsrfHeaders() {
