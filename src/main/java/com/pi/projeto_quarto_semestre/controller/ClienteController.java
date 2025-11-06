@@ -21,12 +21,32 @@ import com.pi.projeto_quarto_semestre.repository.*;
 
 import java.util.Optional;
 
+import com.pi.projeto_quarto_semestre.model.Pedido;
+import com.pi.projeto_quarto_semestre.model.ItemPedido;
+import com.pi.projeto_quarto_semestre.model.Produto;
+import com.pi.projeto_quarto_semestre.repository.PedidoRepository;
+import com.pi.projeto_quarto_semestre.repository.ProdutoRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Controller
 @RequestMapping("/cliente")
 public class ClienteController {
 
     @Autowired
     private EnderecoRepository enderecoRepository;
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ClienteService clienteService;
     private final ClienteRepository clienteRepository;
@@ -353,4 +373,123 @@ public class ClienteController {
 
         return "redirect:/cliente/perfilCliente"; // Redireciona de volta para a pág. de perfil
     }
+
+    @PostMapping("/checkout/finalizar")
+    @Transactional
+    public String finalizarPedido(
+            @RequestParam("endereco_id") Long enderecoId,
+            @RequestParam("forma_pagamento") String formaPagamento,
+            @RequestParam("carrinho_json") String carrinhoJson, // Carrinho (do localStorage) enviado como texto JSON
+            @RequestParam("valor_total") BigDecimal valorTotal,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        // 1. Pegar o Cliente logado
+        Long clienteId = (Long) session.getAttribute("clienteId");
+        if (clienteId == null) {
+            return "redirect:/cliente/auth?tab=login&erro=" + url("Sessão expirada.");
+        }
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        // 2. Pegar o Endereço de entrega selecionado
+        Endereco endereco = enderecoRepository.findById(enderecoId)
+                .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+
+        // 3. Checagem de segurança (se o endereço pertence ao cliente)
+        if (!endereco.getCliente().getId().equals(clienteId)) {
+            ra.addFlashAttribute("erro", "Endereço de entrega inválido.");
+            return "redirect:/checkout/endereco"; // (URL da sua página de escolher endereço)
+        }
+
+        try {
+            // 4. Criar o objeto Pedido principal
+            Pedido pedido = new Pedido();
+            pedido.setCliente(cliente);
+            pedido.setEnderecoEntrega(endereco);
+            pedido.setDataPedido(LocalDateTime.now());
+            pedido.setFormaPagamento(formaPagamento);
+            pedido.setValorTotal(valorTotal);
+
+            // REQUISITO 1: "status de 'aguardando pagamento'"
+            pedido.setStatus("AGUARDANDO_PAGAMENTO");
+
+            // 5. Ler o Carrinho JSON e criar os Itens do Pedido
+            // O JavaScript vai enviar o 'localStorage.getItem("carrinho")' aqui
+            List<Map<String, Object>> cartItems = objectMapper.readValue(carrinhoJson,
+                    new TypeReference<List<Map<String, Object>>>() {});
+
+            if (cartItems.isEmpty()) {
+                ra.addFlashAttribute("erro", "Seu carrinho está vazio.");
+                return "redirect:/carrinho";
+            }
+
+            for (Map<String, Object> cartItem : cartItems) {
+                // O 'id' no JSON do localStorage é o 'produtoId'
+                Long produtoId = Long.parseLong(cartItem.get("id").toString());
+                int quantidade = Integer.parseInt(cartItem.get("quantidade").toString());
+
+                // Busca o produto real no banco para garantir o preço correto
+                Produto produto = produtoRepository.findById(produtoId)
+                        .orElseThrow(() -> new RuntimeException("Produto ID " + produtoId + " não encontrado no estoque."));
+
+                // Cria o ItemPedido
+                ItemPedido item = new ItemPedido();
+                item.setProduto(produto);
+                item.setQuantidade(quantidade);
+                item.setPrecoUnitario(produto.getPreco()); // Guarda o preço do momento da compra
+
+                // Adiciona o item ao pedido (o método helper no Pedido.java cuida da relação)
+                pedido.adicionarItem(item);
+            }
+
+            // 6. Salvar o Pedido (e os Itens, graças ao CascadeType.ALL)
+            // REQUISITO 2: "Um número sequencial do pedido deve ser gerado"
+            // O 'save' faz isso e o ID é gerado automaticamente.
+            Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+            // REQUISITO 3: "Um aviso na tela..."
+            // Vamos redirecionar para uma página de sucesso enviando os dados.
+            ra.addFlashAttribute("sucesso", "Pedido gravado com sucesso!");
+            ra.addFlashAttribute("pedidoId", pedidoSalvo.getId());
+            ra.addFlashAttribute("pedidoValor", pedidoSalvo.getValorTotal());
+
+            // Este é um novo HTML que precisamos criar (Passo 4)
+            return "redirect:/cliente/pedido/sucesso";
+
+        } catch (Exception e) {
+            // Se algo der errado (ex: produto não encontrado, JSON mal formatado)
+            ra.addFlashAttribute("erro", "Erro ao finalizar o pedido: " + e.getMessage());
+            // Devolve o usuário para a página de pagamento (ou carrinho)
+            return "redirect:/carrinho"; // (Mude para a URL da sua pág. de pagamento)
+        }
+    }
+
+    @GetMapping("/pedido/sucesso")
+    public String pedidoSucesso(
+            Model model,
+            HttpSession session,
+            // O Spring automaticamente pega os "Flash Attributes"
+            // que enviamos (pedidoId, pedidoValor, sucesso) e os coloca no Model.
+            // Mas vamos verificar se eles existem para evitar acesso direto à URL.
+            @ModelAttribute("sucesso") String sucesso) {
+
+        // 1. Validar a sessão do usuário (segurança básica)
+        Long clienteId = (Long) session.getAttribute("clienteId");
+        if (clienteId == null) {
+            return "redirect:/cliente/auth?tab=login";
+        }
+
+        // 2. Validar se o usuário veio do fluxo de checkout
+        // Se ele tentar acessar /cliente/pedido/sucesso diretamente,
+        // o atributo "sucesso" não existirá.
+        if (sucesso == null || sucesso.isEmpty()) {
+            return "redirect:/"; // Redireciona para a home
+        }
+
+        // Se ele veio do fluxo correto, os atributos (pedidoId, pedidoValor, sucesso)
+        // já estão no 'model' e serão passados para o HTML.
+        return "pedido-sucesso"; // Nome do nosso novo arquivo HTML
+    }
+
 }

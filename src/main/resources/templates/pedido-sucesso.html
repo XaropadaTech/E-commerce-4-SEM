@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido Concluído!</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; }
+        .sucesso { color: #28a745; font-size: 1.5rem; font-weight: bold; }
+        .erro { color: #dc3545; font-size: 1.5rem; font-weight: bold; }
+        .detalhes-pedido { margin-top: 20px; text-align: left; }
+        .detalhes-pedido p { font-size: 1.1rem; margin: 10px 0; }
+        .detalhes-pedido strong { color: #333; }
+        .link-home { margin-top: 30px; display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 th:if="${sucesso}" class="sucesso" th:text="${sucesso}"></h1>
+    <h1 th:if="${erro}" class="erro" th:text="${erro}"></h1>
+
+    <div th:if="${pedidoId}" class="detalhes-pedido">
+        <h2>Obrigado pela sua compra!</h2>
+
+        <p>Seu pedido foi recebido e está aguardando pagamento.</p>
+
+        <p>Nº do Pedido: <strong th:text="${pedidoId}">#00000</strong></p>
+
+        <p>Valor Total: <strong th:text="'R$ ' + ${#numbers.formatDecimal(pedidoValor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</strong></p>
+    </div>
+
+    <a th:href="@{/}" class="link-home">Voltar para a Página Principal</a>
+</div>
+</body>
+</html>

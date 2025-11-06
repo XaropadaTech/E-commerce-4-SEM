@@ -173,19 +173,33 @@
       </div>
     </div>
 
-    <!-- Ações -->
-    <div class="actions">
-      <!-- Voltar para a etapa de pagamento -->
-      <form th:action="@{/checkout/resumo/back}" method="post">
-        <button type="submit">Voltar</button>
-      </form>
+      <div class="actions">
+          <form th:action="@{/checkout/resumo/back}" method="post">
+              <button type="submit">Voltar</button>
+          </form>
 
-      <!-- Confirmar pedido -->
-      <form th:action="@{/checkout/resumo/concluir}" method="post">
-        <button class="primary" type="submit">Confirmar pedido</button>
-      </form>
-    </div>
-  </div>
+          <form th:action="@{/cliente/checkout/finalizar}" method="post" id="formFinalizarPedido">
+
+              <input type="hidden" name="endereco_id" th:value="${enderecoEntrega.id}" />
+
+              <input type="hidden" name="forma_pagamento" th:value="${pagamento.metodo}" />
+
+              <input type="hidden" name="valor_total" th:value="${totalGeral}" />
+
+              <input type="hidden" name="carrinho_json" id="carrinho_json_input" />
+
+              <button class="primary" type="submit">Confirmar pedido</button>
+          </form>
+      </div>
+  </div> <script>
+      document.getElementById('formFinalizarPedido').addEventListener('submit', function(event) {
+          // Pega o carrinho do localStorage
+          var carrinhoJson = localStorage.getItem('carrinho');
+
+          // Coloca o JSON do carrinho dentro do input oculto
+          document.getElementById('carrinho_json_input').value = carrinhoJson;
+      });
+  </script>
+
 </body>
-
 </html>
