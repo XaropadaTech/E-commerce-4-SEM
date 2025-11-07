@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +43,8 @@ public class Pedido {
     // Requisito (implícito): "data"
     @Column(nullable = false)
     private LocalDateTime dataPedido;
+
+
 
     // Um Pedido tem vários Itens.
     // cascade = CascadeType.ALL: Se o pedido for apagado, os itens vão junto.
@@ -126,4 +129,14 @@ public class Pedido {
         this.itens = itens;
     }
 
+    @Transient
+    private String dataPedidoFormatada;
+
+    public String getDataPedidoFormatada() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"); // Formato da data
+        return dataPedido != null ? dataPedido.format(formatter) : ""; // Verifique se a data não é nula
+    }
+    
+
 }
+

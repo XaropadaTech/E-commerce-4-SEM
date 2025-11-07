@@ -455,11 +455,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         <!-- Meus Pedidos -->
         <section id="section-pedidos" class="content-section">
-            <h1>Meus Pedidos</h1>
-            <div id="listaPedidos">
-                <p>Você ainda não possui pedidos.</p>
-            </div>
-        </section>
+    <ul>
+        <li th:each="pedido : ${pedidos}">
+            <p>
+                <strong>Pedido #: </strong><span th:text="${pedido.id}"></span><br>
+                <strong>Valor Total: </strong><span th:text="${pedido.valorTotal}"></span><br>
+                <strong>Status: </strong><span th:text="${pedido.status}"></span><br>
+                <strong>Data do Pedido: </strong><span th:text="${pedido.dataPedidoFormatada}"></span><br> <!-- Adicionando a data formatada aqui -->
+                <button type="button" class="btn-detalhes" th:data-id="${pedido.id}">Mais Detalhes</button>
+            </p>
+        </li>
+    </ul>
+</section>
 
     </main>
 </div>
@@ -475,6 +482,17 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('section-' + item.dataset.section).classList.add('active');
         });
     });
+    // Exemplo simples: alerta quando clicar no botão "Mais Detalhes"
+        document.addEventListener('DOMContentLoaded', function () {
+            const botoes = document.querySelectorAll('.btn-detalhes');
+            botoes.forEach(btn => {
+                btn.addEventListener('click', function(event){
+                    // opcional: se quiser interceptar clique
+                    console.log('Pedido selecionado: ' + this.getAttribute('href'));
+                    // event.preventDefault(); // descomente se quiser parar o link
+                });
+            });
+        });
     
     </script>
     <script th:src="@{/js/cliente-auth.js}"></script>
