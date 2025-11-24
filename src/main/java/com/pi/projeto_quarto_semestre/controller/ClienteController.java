@@ -9,11 +9,12 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.transaction.Transactional;
 
@@ -42,6 +43,9 @@ public class ClienteController {
 
     @Autowired
     private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private ItemPedidoRepository itemPedidoRepository;
 
     @Autowired
     private ProdutoRepository produtoRepository;
@@ -480,5 +484,52 @@ public String finalizarPedido(
         return "pedido-sucesso"; // Nome do nosso novo arquivo HTML
     }
 
+
+  @GetMapping("/pedidos/{pedidoId}")
+public String visualizarDetalhePedido(@PathVariable Long pedidoId,
+                                      HttpSession session,
+                                      Model model) {
+
+    Long clienteId = (Long) session.getAttribute("clienteId");
+    if (clienteId == null) {
+        return "redirect:/cliente/auth?tab=login&next=/cliente/perfilCliente";
+    }
+
+    Pedido pedido = pedidoRepository.findById(pedidoId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    if (!pedido.getCliente().getId().equals(clienteId)) {
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    var itens = pedido.getItens();
+
+    BigDecimal subtotal = itens.stream()
+            .map(item -> item.getPrecoUnitario()
+                    .multiply(BigDecimal.valueOf(item.getQuantidade())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal totalGeral = pedido.getValorTotal() != null
+            ? pedido.getValorTotal()
+            : subtotal;
+
+    BigDecimal frete = totalGeral.subtract(subtotal);
+    if (frete.compareTo(BigDecimal.ZERO) < 0) {
+        frete = BigDecimal.ZERO;
+    }
+
+    Endereco enderecoEntrega = pedido.getEnderecoEntrega();
+    String formaPagamento = pedido.getFormaPagamento();
+
+    model.addAttribute("pedido", pedido);
+    model.addAttribute("itens", itens);
+    model.addAttribute("subtotal", subtotal);
+    model.addAttribute("frete", frete);
+    model.addAttribute("totalGeral", totalGeral);
+    model.addAttribute("enderecoEntrega", enderecoEntrega);
+    model.addAttribute("formaPagamento", formaPagamento);
+
+    return "pedido-detalhe";
+}
 
 }

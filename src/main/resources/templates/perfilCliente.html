@@ -493,6 +493,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".btn-detalhes").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.dataset.id;
+            window.location.href = "/cliente/pedidos/" + id;
+        });
+    });
+});
     
     </script>
     <script th:src="@{/js/cliente-auth.js}"></script>

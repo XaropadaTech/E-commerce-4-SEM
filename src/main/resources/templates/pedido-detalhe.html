@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Detalhe do Pedido</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+        h1, h2 {
+            margin: 0 0 16px;
+            color: #1f2933;
+        }
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 24px;
+        }
+        .pedido-meta span {
+            display: block;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        .tag-status {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            background: #e5f3ff;
+            color: #1d4ed8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+        th {
+            text-align: left;
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        .right {
+            text-align: right;
+        }
+        .totais {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .totais .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        .totais .total {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .card {
+            padding: 16px;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+        .card h2 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        .campo {
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .campo strong {
+            color: #111827;
+        }
+        .voltar-link {
+            display: inline-block;
+            margin-top: 24px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="pedido-header">
+        <div>
+            <h1>Detalhe do Pedido</h1>
+            <div class="pedido-meta">
+                <span th:text="'Pedido Nº ' + ${pedido.id}">Pedido Nº 123</span>
+                <span th:text="${pedido.dataPedidoFormatada}">
+                    01/01/2025 12:00
+                </span>
+
+            </div>
+        </div>
+        <div>
+            <span class="tag-status" th:text="${pedido.status}">
+                STATUS
+            </span>
+        </div>
+    </div>
+
+    <!-- Lista de itens do pedido -->
+    <h2>Itens do pedido</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Produto</th>
+            <th class="right">Qtd</th>
+            <th class="right">Valor unitário</th>
+            <th class="right">Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${itens}">
+            <td th:text="${item.produto.nome}">Nome do produto</td>
+            <td class="right" th:text="${item.quantidade}">1</td>
+            <td class="right"
+                th:text="${#numbers.formatDecimal(item.precoUnitario,1,'COMMA',2,'POINT')}">
+                0,00
+            </td>
+            <td class="right"
+                th:text="${#numbers.formatDecimal(
+                    item.precoUnitario.multiply(
+                        T(java.math.BigDecimal).valueOf(item.quantidade.longValue())
+                    ),
+                    1,'COMMA',2,'POINT'
+                )}">
+                0,00
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Totais -->
+    <div class="totais box">
+        <div class="row">
+            <span>Subtotal</span>
+            <strong th:text="${#numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">0,00</strong>
+        </div>
+        <div class="row">
+            <span>Frete</span>
+            <strong th:text="${#numbers.formatDecimal(frete,1,'COMMA',2,'POINT')}">0,00</strong>
+        </div>
+        <div class="row total">
+            <span>Total</span>
+            <strong th:text="${#numbers.formatDecimal(totalGeral,1,'COMMA',2,'POINT')}">0,00</strong>
+        </div>
+    </div>
+
+    <!-- Endereço + pagamento -->
+    <div class="section-grid">
+        <div class="card">
+            <h2>Endereço de entrega</h2>
+            <p class="campo">
+                <strong th:text="${enderecoEntrega.logradouro}">Rua Exemplo</strong>,
+                <span th:text="${enderecoEntrega.numero}">123</span>
+                <span th:if="${enderecoEntrega.complemento != null and !#strings.isEmpty(enderecoEntrega.complemento)}"
+                      th:text="' - ' + ${enderecoEntrega.complemento}">Apto 1</span>
+            </p>
+            <p class="campo">
+                <span th:text="${enderecoEntrega.bairro}">Bairro</span> -
+                <span th:text="${enderecoEntrega.cidade}">Cidade</span> /
+                <span th:text="${enderecoEntrega.uf}">UF</span>
+            </p>
+            <p class="campo">
+                CEP:
+                <span th:text="${#strings.substring(enderecoEntrega.cep,0,5) + '-' + #strings.substring(enderecoEntrega.cep,5,8)}">
+                    00000-000
+                </span>
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>Forma de pagamento</h2>
+            <p class="campo">
+                <strong th:text="${formaPagamento}">Cartão de Crédito</strong>
+            </p>
+            <!-- Se formaPagamento for um objeto, dá pra detalhar aqui (últimos dígitos, parcelas etc.) -->
+        </div>
+    </div>
+
+    <!-- Link para voltar à lista de pedidos -->
+    <a class="voltar-link" th:href="@{/cliente/perfilCliente}">
+        &larr; Voltar para Meus pedidos
+    </a>
+
+</div>
+</body>
+</html>
