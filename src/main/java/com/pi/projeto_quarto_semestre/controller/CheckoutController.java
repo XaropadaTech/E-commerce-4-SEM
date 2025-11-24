@@ -300,7 +300,9 @@ else if (freteObj instanceof String s) {
     // (Mantive seu GET /validar para compatibilidade, mas agora usamos /resumo)
     // ============================================================
     @GetMapping("/validar")
-    public String validarPedidoFinal(Model model) {
-        return "validar-pedido-final";
-    }
+public String validarPedidoFinal(Model model, HttpSession session) {
+    // Reaproveita a mesma lógica do resumo, que já calcula itens, subtotal, frete e totalGeral
+    return resumo(model, session);
+}
+
 }

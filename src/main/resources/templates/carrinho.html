@@ -156,8 +156,11 @@
   }
   function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } }
   function getFrete(){ const v = Number(localStorage.getItem(FRETE_KEY)); return isNaN(v) ? 0 : v; }
-  function setFrete(v){ localStorage.setItem(FRETE_KEY, String(v)); }
-
+function setFrete(v){
+  localStorage.setItem(FRETE_KEY, String(v));
+  // compatibilidade com páginas antigas:
+  localStorage.setItem('frete', String(v));
+}
   function normalizeCep(raw){
     const digits = String(raw||'').replace(/\D/g,'').slice(0,8);
     if (digits.length < 8) return null;

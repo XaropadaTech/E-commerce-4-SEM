@@ -178,17 +178,23 @@ const itens = carrinho.map(p => {
   };
 });
 
-// frete pode vir como "12,90", "12.9" ou objeto — normaliza:
-let freteLS = localStorage.getItem('frete');
+// frete pode vir como "12,90", "12.9", número ou objeto — normaliza:
+let freteLS =
+  localStorage.getItem('frete') ??
+  localStorage.getItem('freteSelecionado');
+
 let freteNum = 0;
-if (freteLS) {
+if (freteLS != null) {
   try {
+    // Aceita objeto { valor: ... }, número simples ou string "12,90"
     const fObj = JSON.parse(freteLS);
     freteNum = Number(fObj?.valor ?? fObj ?? 0);
   } catch {
     freteNum = Number(String(freteLS).replace(',', '.'));
   }
 }
+if (isNaN(freteNum)) freteNum = 0;
+
 if (isNaN(freteNum)) freteNum = 0;
 
 await fetch('/checkout/sync-cart', {
