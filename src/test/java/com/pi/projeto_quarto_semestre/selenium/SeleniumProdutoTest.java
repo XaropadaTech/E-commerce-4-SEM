@@ -1,11 +1,7 @@
-package com.pi.projeto_quarto_semestre.Selenium;
+package com.pi.projeto_quarto_semestre.selenium;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,6 +29,7 @@ public class SeleniumProdutoTest {
     }
 
     @Test
+    @DisplayName("CT-S1: Validar Acesso Administrativo e Navegação")
     public void testeAdminAcessaListaDeProdutos() throws InterruptedException {
         // 1. Acessa a home administrativa
         driver.get("http://localhost:8080/paginabko");
@@ -85,6 +82,7 @@ public class SeleniumProdutoTest {
     }
 
     @Test
+    @DisplayName("CT-S2: Validar Cadastro de Produto com Sucesso")
     public void testeCadastrarNovoProduto() throws InterruptedException {
         // 1. Login (O mesmo de sempre)
         driver.get("http://localhost:8080/paginabko");
@@ -134,6 +132,7 @@ public class SeleniumProdutoTest {
     }
 
     @Test
+    @DisplayName("CT-S3: Validar Tentativa de Cadastro (Variante)")
     public void testeTentativaCadastrarNovoProduto() throws InterruptedException {
         // 1. Login (O mesmo de sempre)
         driver.get("http://localhost:8080/paginabko");
