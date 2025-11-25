@@ -46,11 +46,10 @@ public class SeleniumProdutoTest {
 
         System.out.println("Logado na Dashboard. Procurando botão 'Lista Produtos'...");
 
-        // 3. CLICAR NO BOTÃO (Método Exato)
+        // 3. CLICAR NO BOTÃO
         // Tenta clicar no link que tem o texto EXATO "Lista Produtos"
         try {
-            WebElement botaoLista = driver.findElement(By.linkText("LISTA PRODUTOS"));
-            botaoLista.click();
+            driver.findElement(By.linkText("LISTA PRODUTOS")).click();
         } catch (Exception e) {
             // Se falhar, vamos imprimir o erro para saber se foi por espaço em branco
             System.out.println("❌ ERRO: Não achou 'Lista Produtos' exato.");
@@ -94,7 +93,6 @@ public class SeleniumProdutoTest {
         Thread.sleep(1500);
 
         // 2. Ir para Lista de Produtos
-        // (Usando o método que funcionou para você: Link Text em Maiúsculo ou Partial)
         driver.findElement(By.partialLinkText("LISTA PRODUTOS")).click();
         Thread.sleep(1500);
 
@@ -107,7 +105,7 @@ public class SeleniumProdutoTest {
         // Preencher o Formulário
         driver.findElement(By.name("nome")).sendKeys("Produto Teste Selenium");
         driver.findElement(By.name("preco")).sendKeys("99.90");
-        driver.findElement(By.name("avaliacao")).sendKeys("5.0"); // Se houver esse campo
+        driver.findElement(By.name("avaliacao")).sendKeys("5.0");
         driver.findElement(By.name("qtdEstoque")).sendKeys("100");
         driver.findElement(By.name("descricao")).sendKeys("Descrição gerada automaticamente pelo robô.");
 
@@ -122,7 +120,7 @@ public class SeleniumProdutoTest {
 
         Thread.sleep(2000);
 
-        // Validação Extra: O produto aparece na tabela?
+        // Validação Produto: O produto aparece na tabela?
         String corpoPagina = driver.findElement(By.tagName("body")).getText();
         Assertions.assertTrue(corpoPagina.contains("Produto Teste Selenium"), "O novo produto deveria aparecer na lista!");
 
@@ -144,7 +142,6 @@ public class SeleniumProdutoTest {
         Thread.sleep(1500);
 
         // 2. Ir para Lista de Produtos
-        // (Usando o método que funcionou para você: Link Text em Maiúsculo ou Partial)
         driver.findElement(By.partialLinkText("LISTA PRODUTOS")).click();
         Thread.sleep(1500);
 
