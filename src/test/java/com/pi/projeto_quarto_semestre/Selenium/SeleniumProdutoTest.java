@@ -132,4 +132,53 @@ public class SeleniumProdutoTest {
 
         System.out.println("✅ SUCESSO: Produto cadastrado automaticamente!");
     }
+
+    @Test
+    public void testeTentativaCadastrarNovoProduto() throws InterruptedException {
+        // 1. Login (O mesmo de sempre)
+        driver.get("http://localhost:8080/paginabko");
+        Thread.sleep(1000);
+
+        driver.findElement(By.name("email")).sendKeys("itallo@email.com");
+        driver.findElement(By.name("senha")).sendKeys("1234");
+        driver.findElement(By.tagName("button")).click();
+        Thread.sleep(1500);
+
+        // 2. Ir para Lista de Produtos
+        // (Usando o método que funcionou para você: Link Text em Maiúsculo ou Partial)
+        driver.findElement(By.partialLinkText("LISTA PRODUTOS")).click();
+        Thread.sleep(1500);
+
+        // 3. Clicar no botão "+"
+
+        driver.findElement(By.partialLinkText("➕")).click();
+
+        Thread.sleep(1500);
+
+        // Preencher o Formulário
+        driver.findElement(By.name("nome")).sendKeys("Produto Teste Selenium");
+        driver.findElement(By.name("preco")).sendKeys("99.90");
+        driver.findElement(By.name("avaliacao")).sendKeys("6.0"); // Se houver esse campo
+        driver.findElement(By.name("qtdEstoque")).sendKeys("100");
+        driver.findElement(By.name("descricao")).sendKeys("Descrição gerada automaticamente pelo robô.");
+
+        // Usa CSS Selector para achar o botão de submit
+        driver.findElement(By.cssSelector("button[type='submit']")).click();
+
+        Thread.sleep(2000);
+
+        // 7. Validação: Voltou para a lista?
+        String urlFinal = driver.getCurrentUrl();
+        Assertions.assertTrue(urlFinal.contains("listaProdutos"), "Deveria voltar para a lista após salvar!");
+
+        Thread.sleep(2000);
+
+        // Validação Extra: O produto aparece na tabela?
+        String corpoPagina = driver.findElement(By.tagName("body")).getText();
+        Assertions.assertTrue(corpoPagina.contains("Produto Teste Selenium"), "O novo produto deveria aparecer na lista!");
+
+        Thread.sleep(2000);
+
+        System.out.println("✅ SUCESSO: Produto cadastrado automaticamente!");
+    }
 }
