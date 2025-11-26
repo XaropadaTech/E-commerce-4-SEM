@@ -79,8 +79,20 @@
             background: #eff6ff;
             color: #1d4ed8;
         }
-        .btn-editar {
-            margin-top: 14px;
+        .form-status {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            min-width: 220px;
+        }
+        .btn-salvar {
             background: #2563eb;
             color: #fff;
             border: none;
@@ -89,7 +101,7 @@
             cursor: pointer;
             font-size: 0.9rem;
         }
-        .btn-editar:hover {
+        .btn-salvar:hover {
             background: #1e40af;
         }
         .sem-pedidos {
@@ -97,6 +109,16 @@
             color: #6b7280;
             margin-top: 20px;
             font-size: 0.95rem;
+        }
+        .mensagem {
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .mensagem.erro {
+            color: #b91c1c;
+        }
+        .mensagem.sucesso {
+            color: #166534;
         }
     </style>
 </head>
@@ -110,6 +132,9 @@
             Voltar ao painel
         </button>
     </div>
+
+    <div th:if="${erroStatus}" class="mensagem erro" th:text="${erroStatus}"></div>
+    <div th:if="${mensagemSucesso}" class="mensagem sucesso" th:text="${mensagemSucesso}"></div>
 
     <div class="pedidos-container">
 
@@ -136,34 +161,58 @@
                     </span>
                 </div>
                 <div>
-                    <span class="pedido-info-label">Status: </span>
+                    <span class="pedido-info-label">Status atual: </span>
                     <span class="status-pill" th:text="${pedido.status}">
-                        CRIADO
+                        aguardando pagamento
                     </span>
                 </div>
             </div>
 
-            <button type="button"
-                    class="btn-editar"
-                    th:data-id="${pedido.id}">
-                Editar pedido
-            </button>
+            <!-- FORM DE ALTERAÇÃO DE STATUS NO MESMO CARD -->
+            <form class="form-status"
+                  th:action="@{'/listaPedidos/editar/' + ${pedido.id}}"
+                  method="post">
+
+                <label for="status-[[${pedido.id}]]" class="pedido-info-label">
+                    Alterar status:
+                </label>
+
+                <select th:id="'status-' + ${pedido.id}" name="status" required>
+                    <option value="AGUARDANDO PAGAMENTO"
+                            th:selected="${pedido.status} == 'AGUARDANDO PAGAMENTO'">
+                        AGUARDANDO PAGAMENTO
+                    </option>
+                    <option value="PAGAMENTO REJEITADO"
+                            th:selected="${pedido.status} == 'PAGAMENTO REJEITADO'">
+                        PAGAMENTO REJEITADO
+                    </option>
+                    <option value="PAGAMENTO COM SUCESSO"
+                            th:selected="${pedido.status} == 'PAGAMENTO COM SUCESSO'">
+                        PAGAMENTO COM SUCESSO
+                    </option>
+                    <option value="AGUARDANDO RETIRADA"
+                            th:selected="${pedido.status} == 'AGUARDANDO RETIRADA'">
+                        AGUARDANDO RETIRADA
+                    </option>
+                    <option value="EM TRANSITO"
+                            th:selected="${pedido.status} == 'EM TRANSITO'">
+                        EM TRANSITO
+                    </option>
+                    <option value="ENTREGUE"
+                            th:selected="${pedido.status} == 'ENTREGUE'">
+                        ENTREGUE
+                    </option>
+                </select>
+
+                <button type="submit" class="btn-salvar">
+                    Salvar
+                </button>
+            </form>
 
         </div>
 
     </div>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll(".btn-editar").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const id = btn.dataset.id;
-                window.location.href = "/listaPedidos/editar/" + id;
-            });
-        });
-    });
-</script>
 
 </body>
 </html>

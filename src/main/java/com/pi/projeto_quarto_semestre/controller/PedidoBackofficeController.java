@@ -7,9 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Controller
@@ -18,7 +19,7 @@ public class PedidoBackofficeController {
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    // LISTA DE PEDIDOS PARA ESTOQUISTA
+    // Lista de pedidos
     @GetMapping("/listaPedidos")
     public String listarPedidos(HttpSession session, Model model) {
 
@@ -27,41 +28,54 @@ public class PedidoBackofficeController {
             return "redirect:/login";
         }
 
-        // se quiser travar só pra ESTOQUISTA, descomente:
-        // if (!grupoUsuario.equals("ESTOQUISTA")) {
-        //     return "redirect:/paginabko";
-        // }
 
-        // usa o JpaRepository: findAll(Sort)
         List<Pedido> pedidos = pedidoRepository.findAll(
                 Sort.by(Sort.Direction.DESC, "dataPedido")
         );
 
         model.addAttribute("pedidos", pedidos);
-
-        return "listaPedidos"; // templates/listaPedidos.html
+        return "listaPedidos";
     }
 
-    // EDITAR PEDIDO (a rota já existe, depois você define o que editar)
-    @GetMapping("/listaPedidos/editar/{pedidoId}")
-    public String editarPedido(@PathVariable Long pedidoId,
-                               HttpSession session,
-                               Model model) {
+
+
+    // ====== EDITAR PEDIDO (POST) - SALVAR STATUS ======
+    @PostMapping("/listaPedidos/editar/{pedidoId}")
+    public String salvarStatusPedido(@PathVariable Long pedidoId,
+                                     @RequestParam("status") String novoStatus,
+                                     HttpSession session,
+                                     RedirectAttributes redirectAttributes) {
 
         String grupoUsuario = (String) session.getAttribute("grupoUsuario");
         if (grupoUsuario == null) {
             return "redirect:/login";
         }
 
-        Pedido pedido = pedidoRepository.findById(pedidoId)
-                .orElse(null);
+        List<String> statusPermitidos = Arrays.asList(
+                "AGUARDANDO PAGAMENTO",
+                "PAGAMENTO REJEITADO",
+                "PAGAMENTO COM SUCESSO",
+                "AGUARDANDO RETIRADA",
+                "EM TRANSITO",
+                "ENTREGUE"
+        );
 
+        if (!statusPermitidos.contains(novoStatus)) {
+            redirectAttributes.addFlashAttribute("erroStatus", "Status inválido.");
+            return "redirect:/listaPedidos/editar/" + pedidoId;
+        }
+
+        Pedido pedido = pedidoRepository.findById(pedidoId).orElse(null);
         if (pedido == null) {
+            redirectAttributes.addFlashAttribute("erroStatus", "Pedido não encontrado.");
             return "redirect:/listaPedidos";
         }
 
-        model.addAttribute("pedido", pedido);
+        // >>> AQUI é onde o status é alterado e gravado no banco <<<
+        pedido.setStatus(novoStatus);
+        pedidoRepository.save(pedido); // persiste no banco
 
-        return "editarPedido"; // depois você cria esse HTML
+        redirectAttributes.addFlashAttribute("mensagemSucesso", "Status do pedido atualizado com sucesso!");
+        return "redirect:/listaPedidos";
     }
 }
