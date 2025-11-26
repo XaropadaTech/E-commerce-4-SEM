@@ -453,20 +453,115 @@ document.addEventListener("DOMContentLoaded", function () {
             </form>
         </section>
 
-        <!-- Meus Pedidos -->
+             <!-- Meus Pedidos -->
         <section id="section-pedidos" class="content-section">
-    <ul>
-        <li th:each="pedido : ${pedidos}">
-            <p>
-                <strong>Pedido #: </strong><span th:text="${pedido.id}"></span><br>
-                <strong>Valor Total: </strong><span th:text="${pedido.valorTotal}"></span><br>
-                <strong>Status: </strong><span th:text="${pedido.status}"></span><br>
-                <strong>Data do Pedido: </strong><span th:text="${pedido.dataPedidoFormatada}"></span><br> <!-- Adicionando a data formatada aqui -->
-                <button type="button" class="btn-detalhes" th:data-id="${pedido.id}">Mais Detalhes</button>
-            </p>
-        </li>
-    </ul>
-</section>
+            <style>
+                .pedidos-container {
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+                .pedido-card {
+                    background: #ffffff;
+                    padding: 18px 20px;
+                    border-radius: 12px;
+                    margin-bottom: 16px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                    border: 1px solid #e5e7eb;
+                }
+                .pedido-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                }
+                .pedido-id {
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    color: #1f2937;
+                }
+                .pedido-data {
+                    font-size: 0.85rem;
+                    color: #6b7280;
+                }
+                .pedido-info {
+                    margin-top: 10px;
+                    line-height: 1.5rem;
+                    font-size: 0.95rem;
+                }
+                .pedido-info-label {
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .status-pill {
+                    padding: 4px 10px;
+                    border-radius: 999px;
+                    font-size: 0.8rem;
+                    background: #eff6ff;
+                    color: #1d4ed8;
+                }
+                .btn-detalhes {
+                    margin-top: 14px;
+                    background: #2563eb;
+                    color: #fff;
+                    border: none;
+                    padding: 8px 14px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                }
+                .btn-detalhes:hover {
+                    background: #1e40af;
+                }
+                .sem-pedidos {
+                    text-align: center;
+                    color: #6b7280;
+                    margin-top: 20px;
+                    font-size: 0.95rem;
+                }
+            </style>
+
+            <div class="pedidos-container">
+                <h1>Meus Pedidos</h1>
+
+                <div th:if="${#lists.isEmpty(pedidos)}" class="sem-pedidos">
+                    Você ainda não fez nenhum pedido.
+                </div>
+
+                <div th:each="pedido : ${pedidos}" class="pedido-card">
+
+                    <div class="pedido-header">
+                        <div class="pedido-id">
+                            Pedido #<span th:text="${pedido.id}">0</span>
+                        </div>
+                        <div class="pedido-data" th:text="${pedido.dataPedidoFormatada}">
+                            01/01/2025 12:00
+                        </div>
+                    </div>
+
+                    <div class="pedido-info">
+                        <div>
+                            <span class="pedido-info-label">Valor Total: </span>
+                            <span th:text="${#numbers.formatDecimal(pedido.valorTotal,1,'COMMA',2,'POINT')}">
+                                0,00
+                            </span>
+                        </div>
+                        <div>
+                            <span class="pedido-info-label">Status: </span>
+                            <span class="status-pill" th:text="${pedido.status}">
+                                aguardando pagamento
+                            </span>
+                        </div>
+                    </div>
+
+                    <button type="button"
+                            class="btn-detalhes"
+                            th:data-id="${pedido.id}">
+                        Mais Detalhes
+                    </button>
+
+                </div>
+            </div>
+        </section>
+
 
     </main>
 </div>
