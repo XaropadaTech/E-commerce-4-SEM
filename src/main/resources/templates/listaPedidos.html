@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Lista de Pedidos</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.4rem;
+        }
+        .top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .btn-voltar {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #6b7280;
+            color: #ffffff;
+        }
+        .pedidos-container {
+            margin-top: 8px;
+        }
+        .pedido-card {
+            background: #ffffff;
+            padding: 18px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .pedido-id {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .pedido-data {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        .pedido-info {
+            margin-top: 10px;
+            line-height: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .pedido-info-label {
+            font-weight: 600;
+            color: #111827;
+        }
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .btn-editar {
+            margin-top: 14px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-editar:hover {
+            background: #1e40af;
+        }
+        .sem-pedidos {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="top-actions">
+        <h1>Lista de Pedidos</h1>
+        <button class="btn-voltar" type="button" onclick="window.location.href='/paginabko'">
+            Voltar ao painel
+        </button>
+    </div>
+
+    <div class="pedidos-container">
+
+        <div th:if="${#lists.isEmpty(pedidos)}" class="sem-pedidos">
+            Ainda não há pedidos cadastrados.
+        </div>
+
+        <div th:each="pedido : ${pedidos}" class="pedido-card">
+
+            <div class="pedido-header">
+                <div class="pedido-id">
+                    Pedido #<span th:text="${pedido.id}">0</span>
+                </div>
+                <div class="pedido-data" th:text="${pedido.dataPedidoFormatada}">
+                    01/01/2025 12:00
+                </div>
+            </div>
+
+            <div class="pedido-info">
+                <div>
+                    <span class="pedido-info-label">Valor Total: </span>
+                    <span th:text="${#numbers.formatDecimal(pedido.valorTotal,1,'COMMA',2,'POINT')}">
+                        0,00
+                    </span>
+                </div>
+                <div>
+                    <span class="pedido-info-label">Status: </span>
+                    <span class="status-pill" th:text="${pedido.status}">
+                        CRIADO
+                    </span>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="btn-editar"
+                    th:data-id="${pedido.id}">
+                Editar pedido
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".btn-editar").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.id;
+                window.location.href = "/listaPedidos/editar/" + id;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
