@@ -188,10 +188,18 @@
 <body>
     <div class="main-container">
         <div class="content-wrapper">
-            <div class="page-header">
-                <h1>📦 Produtos Cadastrados</h1>
-                <p>Gerencie todos os produtos do seu e-commerce</p>
-            </div>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+    <div>
+        <h1>📦 Produtos Cadastrados</h1>
+        <p>Gerencie todos os produtos do seu e-commerce</p>
+    </div>
+
+    <!-- Botão voltar para o Backoffice -->
+    <a href="/paginabko" class="btn btn-secondary">
+        ⬅ Voltar ao painel
+    </a>
+</div>
+
 
             <div class="filter-section">
                 <form th:action="@{/listaProdutos}" method="get" class="filter-form">
@@ -340,6 +348,7 @@
                    th:href="@{/listaProdutos(page=${paginaAtual + 1}, nome=${filtroNome})}">
                     Próxima →
                 </a>
+                
             </div>
         </div>
     </div>

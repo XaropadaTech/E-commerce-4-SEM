@@ -163,10 +163,17 @@
 <body>
     <div class="main-container">
         <div class="content-wrapper">
-            <div class="page-header">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div>
                 <h1>👥 Usuários Cadastrados</h1>
                 <p>Gerencie todos os usuários do sistema</p>
             </div>
+
+            <!-- Botão voltar para o Backoffice -->
+            <a href="/paginabko" class="btn btn-secondary">
+                ⬅ Voltar ao painel
+            </a>
+        </div>
 
             <div class="filter-section">
                 <form th:action="@{/listaUsuarios}" method="get" class="filter-form">
